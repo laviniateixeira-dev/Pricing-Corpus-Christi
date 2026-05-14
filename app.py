@@ -27,7 +27,7 @@ ref_1         = "pascoa_2026"
 ref_2         = "consciencia_2025" 
 ref_3         = "corpus_2025"
 
-# OS SEUS LINKS DO GITHUB (Mantido apenas o necessário para o Editor)
+# OS SEUS LINKS DO GITHUB 
 GITHUB_RAW_CURVA = f"https://raw.githubusercontent.com/laviniateixeira-dev/Pricing-Corpus-Christi/main/data/curva_{feriado_atual}.csv"
 # ==========================================
 
@@ -37,7 +37,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS PREMIUM VIBRANTE: ADAPTATIVO (LIGHT/DARK) + BUSER PINK ---
+# --- CSS PREMIUM VIBRANTE: FILTROS FIÉIS À IMAGEM ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
@@ -47,7 +47,8 @@ st.markdown("""
   --buser-pink: #FF3377;
   --buser-pink-light: #FF66A3;
   --buser-pink-transp: rgba(255, 51, 119, 0.15);
-  --filter-bg: #1A0B14;
+  --filter-bg: #0F050A; /* Fundo super escuro (quase preto) para os filtros */
+  --tag-bg: #3D1225;    /* Fundo vinho para as pílulas (tags) */
 }
 
 /* Tipografia Global */
@@ -95,24 +96,51 @@ h1, h2, h3, .pg-title, .section-title {
   margin-bottom: 8px; margin-top: 2rem; 
 }
 
-/* ── ESTILIZAÇÃO DOS FILTROS (DARK ROSA) ── */
+/* ── ESTILIZAÇÃO IDÊNTICA À IMAGEM PARA SELECT, MULTISELECT E TEXT INPUT ── */
+
+/* Fundo base da caixa de seleção e input de texto */
 [data-testid="stMultiSelect"] [data-baseweb="select"] > div,
-[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+[data-testid="stSelectbox"] [data-baseweb="select"] > div,
+[data-testid="stTextInput"] input {
     background-color: var(--filter-bg) !important; 
     border: 1px solid var(--buser-pink) !important; 
-    border-radius: 8px !important;
-    min-height: 45px !important;
+    border-radius: 6px !important;
+    min-height: 42px !important;
+    color: var(--buser-pink-light) !important; /* Cor do texto digitado/selecionado */
 }
 
-[data-testid="stMultiSelect"] [data-baseweb="select"] span, 
+/* Cor do texto para inputs simples e placeholder */
+[data-testid="stTextInput"] input::placeholder {
+    color: rgba(255, 102, 163, 0.5) !important;
+}
+
+/* Estilo do texto dentro do Selectbox normal */
 [data-testid="stSelectbox"] [data-baseweb="select"] span, 
-[data-testid="stMultiSelect"] [data-baseweb="select"] div,
 [data-testid="stSelectbox"] [data-baseweb="select"] div {
     color: var(--buser-pink-light) !important;
     font-weight: 600 !important;
 }
 
-/* Dropdown */
+/* ── TAGS DO MULTISELECT (As "Pílulas") ── */
+[data-baseweb="tag"] {
+  background-color: var(--tag-bg) !important; /* Vinho escuro */
+  border: 1px solid var(--buser-pink) !important; /* Borda rosa fina */
+  border-radius: 4px !important;
+  margin-top: 4px !important;
+  margin-bottom: 4px !important;
+}
+[data-baseweb="tag"] span {
+  color: #FFFFFF !important; /* Letra branca/bem clara igual na imagem */
+  font-weight: 800 !important;
+  font-size: 0.8rem !important;
+}
+
+/* Ícone de fechar "x" na tag */
+[data-baseweb="tag"] svg {
+  color: var(--buser-pink-light) !important;
+}
+
+/* Dropdown (O menu que abre ao clicar) */
 [data-baseweb="popover"] [data-baseweb="menu"] {
     background-color: var(--filter-bg) !important;
     border: 1px solid var(--buser-pink) !important;
@@ -122,23 +150,15 @@ h1, h2, h3, .pg-title, .section-title {
     font-weight: 500 !important;
 }
 [data-baseweb="option"]:hover, [aria-selected="true"][data-baseweb="option"] {
-    background-color: #2D1422 !important; 
+    background-color: var(--tag-bg) !important; 
 }
 
-/* Tags de Multiselect */
-[data-baseweb="tag"] {
-  background-color: rgba(255, 51, 119, 0.2) !important; 
-  border: 1px solid var(--buser-pink) !important;
-  border-radius: 4px !important;
-}
-[data-baseweb="tag"] span:first-child { color: #FFFFFF !important; font-weight: 700 !important; }
-
-/* Botões */
+/* ── BOTÕES GERAIS E ABAS ── */
 [data-testid="stButton"] button {
     border-color: var(--buser-pink) !important;
     color: var(--buser-pink) !important;
     font-weight: 600 !important;
-    border-radius: 8px !important;
+    border-radius: 6px !important;
 }
 [data-testid="stButton"] button:hover {
     background-color: var(--buser-pink) !important;
@@ -149,13 +169,11 @@ h1, h2, h3, .pg-title, .section-title {
     color: white !important;
 }
 
-/* Tabelas e Data Editor */
 [data-testid="stDataTable"] {
   border: 1px solid rgba(150, 150, 150, 0.2) !important;
-  border-radius: 10px !important;
+  border-radius: 8px !important;
 }
 
-/* Abas */
 [data-testid="stTabs"] [data-baseweb="tab"] {
   font-family: 'DM Sans', sans-serif !important;
   padding-top: 10px; padding-bottom: 10px;
@@ -166,7 +184,7 @@ h1, h2, h3, .pg-title, .section-title {
   font-weight: 700 !important;
 }
 
-/* Banners (Adaptados para Light/Dark) */
+/* Banners (Avisos de linhas enviadas) */
 .acion-banner {
   display: flex; align-items: center; background-color: rgba(16, 185, 129, 0.1); 
   border: 1px solid rgba(16, 185, 129, 0.3); border-left: 4px solid #10B981; 

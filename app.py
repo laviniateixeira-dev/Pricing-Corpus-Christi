@@ -5,7 +5,6 @@ import requests
 import io
 import base64
 import json
-import plotly.express as px
 import os
 from datetime import datetime
 
@@ -28,219 +27,161 @@ ref_1         = "pascoa_2026"
 ref_2         = "consciencia_2025" 
 ref_3         = "corpus_2025"
 
-# DATAS ÂNCORA PARA A ABA DE RESULTADOS (Edite com as datas reais de Corpus Christi do seu banco)
-data_ancora_ida   = "2026-06-03" 
-data_ancora_volta = "2026-06-07" 
-
-# OS SEUS LINKS DO GITHUB
+# OS SEUS LINKS DO GITHUB (Mantido apenas o necessário para o Editor)
 GITHUB_RAW_CURVA = f"https://raw.githubusercontent.com/laviniateixeira-dev/Pricing-Corpus-Christi/main/data/curva_{feriado_atual}.csv"
-GITHUB_RAW_GERAL = f"https://raw.githubusercontent.com/laviniateixeira-dev/Pricing-Corpus-Christi/main/data/resultados_geral_{feriado_atual}.csv"
-GITHUB_RAW_DIA   = f"https://raw.githubusercontent.com/laviniateixeira-dev/Pricing-Corpus-Christi/main/data/resultados_dia_{feriado_atual}.csv"
-GITHUB_RAW_ROTA  = f"https://raw.githubusercontent.com/laviniateixeira-dev/Pricing-Corpus-Christi/main/data/resultados_rota_antecedencia_{feriado_atual}.csv"
 # ==========================================
 
 st.set_page_config(
-    page_title="Pricing · Corpus Christi",
+    page_title="Pricing · Editor",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- PALETA: PRETO/GRAFITE NEUTRO PURO & ROSA ---
+# --- CSS PREMIUM VIBRANTE: ADAPTATIVO (LIGHT/DARK) + BUSER PINK ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 
+/* Variáveis da Marca Buser */
 :root {
-  --bg-page:   #0D0D0D; 
-  --bg-card:   #171717; 
-  --ink:       #FFFFFF; 
-  --ink-muted: #999999; 
-  --buser:     #FF66A3; 
-  --buser-lt:  #FFB3D1; 
-  --bdr:       #2A2A2A; 
-  --ink-dark:  #000000; 
+  --buser-pink: #FF3377;
+  --buser-pink-light: #FF66A3;
+  --buser-pink-transp: rgba(255, 51, 119, 0.15);
+  --filter-bg: #1A0B14;
 }
 
-*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body,
-[data-testid="stAppViewContainer"],
-[data-testid="stAppViewBlockContainer"],
-section[data-testid="stMain"] > div {
-  background-color: var(--bg-page) !important;
-  color: var(--ink) !important;
+/* Tipografia Global */
+html, body, [class*="css"], [data-testid="stMetricLabel"] p {
   font-family: 'DM Sans', sans-serif !important;
 }
-
-[data-testid="stWidgetLabel"] p {
-  color: var(--ink) !important;
-  font-size: .88rem !important;
-  font-weight: 500 !important;
-  margin-bottom: 6px !important;
+h1, h2, h3, .pg-title, .section-title {
+  font-family: 'DM Serif Display', serif !important;
+  color: var(--text-color) !important;
 }
 
-[data-testid="stSidebar"] {
-  background-color: var(--bg-card) !important;
-  border-right: 1px solid var(--bdr) !important;
-}
-[data-testid="stSidebar"] * {
-  color: var(--ink) !important;
-}
-
-.block-container { padding: 3rem 4rem !important; max-width: 100% !important; }
-
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bdr); border-radius: 4px; }
-
-/* Inputs Padrão */
-[data-testid="stTextInput"] input {
-  background-color: var(--bg-page) !important;
-  border: 1px solid var(--bdr) !important;
-  border-radius: 6px !important;
-  color: #FFFFFF !important; 
-  font-size: .9rem !important;
-  padding: 10px 12px !important;
-}
-[data-testid="stTextInput"] input:focus {
-  border-color: var(--buser) !important; 
-  box-shadow: 0 0 0 1px var(--buser) !important;
-}
-
-/* Base do Multiselect */
-[data-testid="stMultiSelect"] [data-baseweb="select"] > div {
-  background-color: var(--bg-page) !important;
-  border: 1px solid var(--bdr) !important;
-  border-radius: 6px !important;
-  min-height: 38px !important;
-  color: #FFFFFF !important;
-}
-[data-testid="stMultiSelect"] [data-baseweb="select"] > div:focus-within {
-  border-color: var(--buser) !important;
-}
-
-/* Efeito nas Tags dos Filtros (Multiselect Aba 1) */
-[data-baseweb="tag"] {
-  background-color: #26111A !important; 
-  border: 1px solid #401B2B !important;
-  border-radius: 4px !important;
-}
-[data-baseweb="tag"] span:first-child { color: var(--buser) !important; font-size: .75rem !important; }
-
-/* Transformando os Selectboxes (Aba 2 e 3) para ficarem com efeito Rosinha igual as Tags */
-[data-testid="stSelectbox"] [data-baseweb="select"] > div {
-  background-color: #26111A !important; 
-  border: 1px solid #401B2B !important;
-  border-radius: 4px !important;
-  min-height: 38px !important;
-}
-[data-testid="stSelectbox"] [data-baseweb="select"] > div * {
-  color: var(--buser) !important;
-}
-[data-testid="stSelectbox"] [data-baseweb="select"] > div:focus-within,
-[data-testid="stSelectbox"] [data-baseweb="select"] > div:hover {
-  border-color: var(--buser) !important;
-}
-
-/* Menus suspensos (Dropdowns abertos) */
-[data-baseweb="popover"] [data-baseweb="menu"] {
-  background-color: var(--bg-card) !important;
-  border: 1px solid var(--bdr) !important;
-  border-radius: 6px !important;
-}
-[data-baseweb="option"] { background-color: var(--bg-card) !important; font-size: .85rem !important; color: var(--ink) !important; padding: 10px 12px !important; }
-[data-baseweb="option"]:hover, [aria-selected="true"][data-baseweb="option"] { background-color: #27272A !important; }
-
-/* Botões */
-[data-testid="stButton"] > button {
-  background-color: var(--bg-card) !important;
-  border: 1px solid var(--bdr) !important;
-  color: var(--ink) !important;
-  font-size: .85rem !important;
-  font-weight: 500 !important;
-  border-radius: 6px !important;
-  padding: 6px 16px !important;
-  transition: all .2s ease-in-out !important;
-}
-[data-testid="stButton"] > button:hover {
-  border-color: var(--buser) !important;
-  color: var(--buser) !important;
-}
-[data-testid="stButton"] > button[kind="primary"] {
-  background-color: var(--buser) !important;
-  color: var(--ink-dark) !important;
-  border-color: var(--buser) !important;
-  font-weight: 600 !important;
-}
-[data-testid="stButton"] > button[kind="primary"]:hover {
-  opacity: 0.85;
-}
-
-/* Checkbox */
-[data-testid="stCheckbox"] label { color: var(--ink-muted) !important; }
-
-/* Abas */
-[data-testid="stTabs"] [data-baseweb="tab-list"] {
-  background: transparent !important;
-  border-bottom: 2px solid var(--bdr) !important;
-  gap: 20px !important;
-  padding-bottom: 5px !important;
-}
-[data-testid="stTabs"] [data-baseweb="tab"] {
-  background: transparent !important;
-  color: var(--ink-muted) !important;
-  font-size: 1rem !important;
-  font-weight: 500 !important;
-  border: none !important;
-  border-bottom: 3px solid transparent !important;
-  padding: 10px 5px !important;
-  margin-bottom: -7px !important;
-}
-[data-testid="stTabs"] [data-baseweb="tab"]:hover { color: var(--ink) !important; }
-[data-testid="stTabs"] [aria-selected="true"][data-baseweb="tab"] {
-  color: var(--buser) !important; 
-  border-bottom-color: var(--buser) !important;
-}
-[data-testid="stTabs"] [data-baseweb="tab-highlight"],
-[data-testid="stTabs"] [data-baseweb="tab-border"] { display: none !important; }
-
-/* Tipografia e Headers (Espaçamento reduzido) */
+/* Headers Customizados */
 .pg-header {
   display: flex; align-items: flex-end; justify-content: space-between;
-  padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--bdr);
+  padding-bottom: 1rem; margin-bottom: 1.5rem; 
+  border-bottom: 2px solid var(--buser-pink-transp);
 }
-.pg-eyebrow { font-size: .75rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--buser); margin-bottom: 8px; }
-.pg-title { font-family: 'DM Serif Display', serif; font-size: 2.5rem; font-weight: 400; color: var(--ink) !important; line-height: 1.1; }
+.pg-eyebrow { 
+  font-size: .75rem; font-weight: 800; letter-spacing: 1.5px; 
+  text-transform: uppercase; color: var(--buser-pink); margin-bottom: 4px; 
+}
+.pg-title { 
+  font-size: 2.5rem; font-weight: 400; line-height: 1.1; 
+  display: flex; align-items: center;
+}
+
+/* Ponto Live Pulsante */
 .live-dot {
-  width: 8px; height: 8px; border-radius: 50%; background-color: var(--buser); display: inline-block; animation: pulse 3s infinite; margin-right: 6px;
+  height: 12px; width: 12px; background-color: var(--buser-pink);
+  border-radius: 50%; display: inline-block; margin-right: 15px;
+  box-shadow: 0 0 0 0 rgba(255, 51, 119, 0.7);
+  animation: pulse-pink 2s infinite;
 }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-.section-label { font-size: .7rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 10px; margin-top: 2rem; }
-.section-title { font-family: 'DM Serif Display', serif; font-size: 1.4rem; font-weight: 400; color: var(--ink) !important; margin-bottom: 5px; }
+@keyframes pulse-pink {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 51, 119, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 51, 119, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 51, 119, 0); }
+}
 
-/* Banners (Cores frias e limpas) */
+/* Labels de Seção */
+.section-label { 
+  font-size: .75rem; font-weight: 800; letter-spacing: 1.2px; 
+  text-transform: uppercase; color: var(--buser-pink) !important;
+  margin-bottom: 8px; margin-top: 2rem; 
+}
+
+/* ── ESTILIZAÇÃO DOS FILTROS (DARK ROSA) ── */
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div,
+[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+    background-color: var(--filter-bg) !important; 
+    border: 1px solid var(--buser-pink) !important; 
+    border-radius: 8px !important;
+    min-height: 45px !important;
+}
+
+[data-testid="stMultiSelect"] [data-baseweb="select"] span, 
+[data-testid="stSelectbox"] [data-baseweb="select"] span, 
+[data-testid="stMultiSelect"] [data-baseweb="select"] div,
+[data-testid="stSelectbox"] [data-baseweb="select"] div {
+    color: var(--buser-pink-light) !important;
+    font-weight: 600 !important;
+}
+
+/* Dropdown */
+[data-baseweb="popover"] [data-baseweb="menu"] {
+    background-color: var(--filter-bg) !important;
+    border: 1px solid var(--buser-pink) !important;
+}
+[data-baseweb="option"] {
+    color: var(--buser-pink-light) !important;
+    font-weight: 500 !important;
+}
+[data-baseweb="option"]:hover, [aria-selected="true"][data-baseweb="option"] {
+    background-color: #2D1422 !important; 
+}
+
+/* Tags de Multiselect */
+[data-baseweb="tag"] {
+  background-color: rgba(255, 51, 119, 0.2) !important; 
+  border: 1px solid var(--buser-pink) !important;
+  border-radius: 4px !important;
+}
+[data-baseweb="tag"] span:first-child { color: #FFFFFF !important; font-weight: 700 !important; }
+
+/* Botões */
+[data-testid="stButton"] button {
+    border-color: var(--buser-pink) !important;
+    color: var(--buser-pink) !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+}
+[data-testid="stButton"] button:hover {
+    background-color: var(--buser-pink) !important;
+    color: white !important;
+}
+[data-testid="stButton"] button[kind="primary"] {
+    background-color: var(--buser-pink) !important;
+    color: white !important;
+}
+
+/* Tabelas e Data Editor */
+[data-testid="stDataTable"] {
+  border: 1px solid rgba(150, 150, 150, 0.2) !important;
+  border-radius: 10px !important;
+}
+
+/* Abas */
+[data-testid="stTabs"] [data-baseweb="tab"] {
+  font-family: 'DM Sans', sans-serif !important;
+  padding-top: 10px; padding-bottom: 10px;
+}
+[data-testid="stTabs"] [aria-selected="true"][data-baseweb="tab"] {
+  color: var(--buser-pink) !important; 
+  border-bottom-color: var(--buser-pink) !important;
+  font-weight: 700 !important;
+}
+
+/* Banners (Adaptados para Light/Dark) */
 .acion-banner {
-  display: flex; align-items: center; background-color: #052616; border: 1px solid #064024;
-  border-left: 4px solid #10B981; border-radius: 6px; padding: 14px 20px; margin: 1.5rem 0 1rem;
+  display: flex; align-items: center; background-color: rgba(16, 185, 129, 0.1); 
+  border: 1px solid rgba(16, 185, 129, 0.3); border-left: 4px solid #10B981; 
+  border-radius: 8px; padding: 14px 20px; margin: 1.5rem 0 1rem;
 }
-.acion-txt { font-size: .9rem; color: #10B981 !important; font-weight: 500; }
+.acion-txt { font-size: .95rem; color: #10B981 !important; font-weight: 700; }
 
 .warn-banner {
-  background-color: #2E1A05; border: 1px solid #4D2B08; border-left: 4px solid #F59E0B;
-  border-radius: 6px; padding: 12px 18px; margin-bottom: 1rem;
-  font-size: .85rem; color: #FCD34D; font-weight: 400;
+  background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); 
+  border-left: 4px solid #F59E0B; border-radius: 8px; padding: 12px 18px; margin-bottom: 1rem;
+  font-size: .9rem; color: #F59E0B; font-weight: 600;
 }
 
-/* Dataframe Nativo do Streamlit */
-[data-testid="stDataTable"] {
-  border: 1px solid var(--bdr) !important;
-  border-radius: 8px !important;
-  overflow: hidden !important;
-}
-
-.footer { display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; margin-top: 2rem; border-top: 1px solid var(--bdr); }
-.ftxt { font-size: .75rem; color: var(--ink-muted); }
+.footer { display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; margin-top: 2rem; border-top: 1px solid rgba(150, 150, 150, 0.2); }
+.ftxt { font-size: .8rem; font-weight: 500; color: var(--text-color); opacity: 0.6; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -283,12 +224,9 @@ with st.sidebar:
         st.rerun()
 
     df_editor_raw = prep_editor(load_data(url_editor))
-    df_geral_raw  = load_data(GITHUB_RAW_GERAL)
-    df_dia_raw    = load_data(GITHUB_RAW_DIA)
-    df_rota_raw   = load_data(GITHUB_RAW_ROTA)
 
 # ── ABAS DA PÁGINA ────────────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4 = st.tabs(["Resultados", "Acompanhamento por Antecedência", "Editor de Preços", "Histórico de Alterações"])
+tab1, tab2 = st.tabs(["Editor de Preços", "Histórico de Alterações"])
 
 # ── FUNÇÃO 1: EDITOR DE PREÇOS ────────────────────────────────────────────────
 def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
@@ -298,9 +236,9 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
     <div class="pg-header">
       <div>
         <div class="pg-eyebrow">Ações de Pricing</div>
-        <div class="pg-title">{titulo}</div>
+        <div class="pg-title"><span class="live-dot"></span>{titulo}</div>
       </div>
-      <div><span class="live-dot"></span><span style="color:var(--ink-muted); font-size:0.8rem;">Atualizado via Databricks às {agora_t}</span></div>
+      <div><span style="color:var(--text-color); opacity: 0.6; font-size:0.85rem; font-weight: 500;">Atualizado via Databricks às {agora_t}</span></div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -351,7 +289,6 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
                 st.session_state[key_enviadas] = set()
                 st.rerun()
 
-    # --- ADICIONADO DATA_ATUALIZACAO AQUI ---
     cols_editor = ["row_id", "data", "antecedencia", "rota_principal", "sentido", "tipo_assento", "turno", f"buscas_{ref_1}", "buscas_atual", f"grupos_{ref_1}", "grupos_atual", "pax", "capacidade_atual", "vagas_restantes", f"lf_{ref_1}", "load_factor_atual", f"ratio_lf_{ref_1}", f"tkm_{ref_1}", "tkm_atual", "price_cc", "mult_atual_aplicado", "mult_flutuacao", "preco_flutuacao", "preco_cenario_atual", "preco_atual_bucket", "max_split", "preco_maximo_feriado", "data_atualizacao"]
     cols_presentes = [c for c in cols_editor if c in df_cv_editor.columns]
     df_editor = df_cv_editor[cols_presentes].copy()
@@ -365,7 +302,6 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
     df_editor["incluir"] = df_editor["row_id"].map(lambda x: st.session_state[dict_key].get(x, {}).get("incluir", True))
     df_editor["Preco novo"] = df_editor["row_id"].map(lambda x: st.session_state[dict_key].get(x, {}).get("Preco novo", None))
 
-    # --- ADICIONADO DATA_ATUALIZACAO AQUI NO FINAL ---
     show_cols = [
         "incluir", "data_fmt", "antecedencia", "rota_principal", "sentido", 
         "tipo_assento", "turno", f"buscas_{ref_1}", "buscas_atual", 
@@ -401,7 +337,7 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         "preco_flutuacao": st.column_config.NumberColumn("Preço Flutuação", disabled=True, format="R$ %.2f"),
         "preco_maximo_feriado": st.column_config.NumberColumn("Teto Flutuação", disabled=True, format="R$ %.2f"),
         "Preco novo": st.column_config.NumberColumn("Preço Novo", min_value=0.0, format="R$ %.2f"),
-        "data_atualizacao": st.column_config.TextColumn("Data Atualização", disabled=True), # <-- CONFIG DA COLUNA
+        "data_atualizacao": st.column_config.TextColumn("Data Atualização", disabled=True), 
     }
 
     st.markdown('<div class="section-label">Planilha de Edição</div>', unsafe_allow_html=True)
@@ -504,7 +440,7 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
 
             st.text_input("Token de Acesso do GitHub (Apenas Sessão):", type="password", key=f"t3_gh_token")
     else:
-        st.markdown('<div style="padding:15px 20px; background:var(--bg-card); border:1px dashed var(--bdr); border-radius:6px; margin-top:20px; text-align:center; color:var(--ink-muted);">Nenhum preço alterado ainda. Preencha a coluna <b>Preço Novo</b> na tabela acima.</div>', unsafe_allow_html=True)
+        st.markdown('<div style="padding:15px 20px; background:var(--secondary-background-color); border:1px dashed var(--buser-pink); border-radius:8px; margin-top:20px; text-align:center; color:var(--text-color); font-weight: 500;">Nenhum preço alterado ainda. Preencha a coluna <b>Preço Novo</b> na tabela acima.</div>', unsafe_allow_html=True)
         if st.button("Limpar Tudo", key=f"t3_reset_empty"):
             st.session_state[key_version] += 1
             st.session_state[key_enviadas] = set()
@@ -514,245 +450,13 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
     st.markdown(f'<div class="footer"><span class="ftxt">{len(df_cv_editor)} linhas exibidas | {n_ocultas} ocultas</span><span class="ftxt">Cálculo: Mult = Preço Novo / COALESCE(Preço Flutuação, Max Split)</span></div>', unsafe_allow_html=True)
 
 
-# ── FUNÇÃO 2: ACOMPANHAMENTO POR ANTECEDÊNCIA (PLOTLY) ────────────────────────
-def render_rota_antecedencia(df_ra: pd.DataFrame):
-    st.markdown("""
-    <div class="pg-header">
-      <div>
-        <div class="pg-eyebrow">Acompanhamento</div>
-        <div class="pg-title">Curva por Antecedência</div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    if df_ra.empty:
-        st.info("Nenhum dado encontrado para acompanhamento de rotas.")
-        return
-
-    df_ra['data'] = pd.to_datetime(df_ra['data'], errors='coerce')
-    
-    st.markdown('<div class="section-label" style="margin-top: 0.5rem;">Selecione o Corte</div>', unsafe_allow_html=True)
-    col_f1, col_f2, col_f3 = st.columns(3)
-    
-    with col_f1: 
-        rota_sel = st.selectbox("Rota Principal:", options=sorted(df_ra['rota_principal'].dropna().unique()))
-    with col_f2:
-        df_rota = df_ra[df_ra['rota_principal'] == rota_sel]
-        sentido_sel = st.selectbox("Sentido:", options=sorted(df_rota['eixo_sentido'].dropna().unique()))
-    with col_f3:
-        df_sentido = df_rota[df_rota['eixo_sentido'] == sentido_sel]
-        data_sel = st.selectbox("Data da Viagem:", options=sorted(df_sentido['data'].dropna().unique()), format_func=lambda x: pd.to_datetime(x).strftime('%d/%m/%Y'))
-
-    df_filt = df_sentido[df_sentido['data'] == data_sel].copy()
-    if df_filt.empty:
-        st.warning("Sem dados para este corte exato.")
-        return
-
-    df_plot = df_filt.groupby('antecedencia').agg({
-        'pax_atual': 'sum', 'pax_referencia': 'sum', 
-        'lf_atual': 'mean', 'lf_referencia': 'mean', 
-        'yield_atual': 'mean', 'yield_referencia': 'mean', 
-        'ticket_medio_atual': 'mean', 'ticket_medio_referencia': 'mean'
-    }).reset_index()
-
-    st.markdown('<div class="section-label">Gráfico de Evolução</div>', unsafe_allow_html=True)
-    metrica_grafico = st.radio("Escolha o indicador:", options=["Passageiros (Pax)", "Load Factor", "Yield (R$)", "Ticket Médio (R$)"], horizontal=True)
-
-    chart_df = df_plot.copy()
-    
-    if metrica_grafico == "Passageiros (Pax)": 
-        y_cols = ['pax_atual', 'pax_referencia']
-    elif metrica_grafico == "Load Factor": 
-        y_cols = ['lf_atual', 'lf_referencia']
-    elif metrica_grafico == "Yield (R$)": 
-        y_cols = ['yield_atual', 'yield_referencia']
-    else: 
-        y_cols = ['ticket_medio_atual', 'ticket_medio_referencia']
-
-    chart_df = chart_df[['antecedencia'] + y_cols].rename(columns={y_cols[0]: "Cenário Atual", y_cols[1]: "Referência"})
-    df_melt = chart_df.melt(id_vars='antecedencia', var_name='Cenário', value_name='Valor')
-
-    fig = px.line(
-        df_melt,
-        x='antecedencia',
-        y='Valor',
-        color='Cenário',
-        color_discrete_map={'Cenário Atual': '#FF66A3', 'Referência': '#FFFFFF'},
-        markers=True
-    )
-
-    if metrica_grafico in ["Load Factor", "Yield (R$)"]:
-        fig.update_yaxes(range=[0, 1], title=metrica_grafico, showgrid=True, gridcolor="#2A2A2A")
-    else:
-        fig.update_yaxes(rangemode="tozero", title=metrica_grafico, showgrid=True, gridcolor="#2A2A2A")
-
-    fig.update_layout(
-        hovermode="x unified",
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        font_color="#999999",
-        margin=dict(t=10, b=10, l=0, r=0),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1,
-            title=None
-        )
-    )
-
-    fig.update_xaxes(
-        title="Dias de Antecedência",
-        tickformat="d",
-        dtick=2, 
-        showgrid=True,
-        gridcolor="#2A2A2A"
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown('<div class="section-label" style="margin-top: 2.5rem;">Tabela de Acompanhamento (Dia a Dia)</div>', unsafe_allow_html=True)
-    
-    col_config = {
-        "antecedencia": st.column_config.NumberColumn("Dias Antec.", format="%d"),
-        "pax_atual": st.column_config.NumberColumn("Pax (Atual)"),
-        "pax_referencia": st.column_config.NumberColumn("Pax (Ref)"),
-        "ticket_medio_atual": st.column_config.NumberColumn("Ticket Médio (Atual)", format="R$ %.2f"),
-        "ticket_medio_referencia": st.column_config.NumberColumn("Ticket Médio (Ref)", format="R$ %.2f"),
-        "lf_atual": st.column_config.NumberColumn("LF (Atual)", format="%.2f"),
-        "lf_referencia": st.column_config.NumberColumn("LF (Ref)", format="%.2f"),
-        "yield_atual": st.column_config.NumberColumn("Yield (Atual)", format="R$ %.3f"),
-        "yield_referencia": st.column_config.NumberColumn("Yield (Ref)", format="R$ %.3f")
-    }
-    
-    cols_to_show = ["antecedencia", "pax_atual", "pax_referencia", "ticket_medio_atual", "ticket_medio_referencia", "lf_atual", "lf_referencia", "yield_atual", "yield_referencia"]
-    
-    st.dataframe(
-        df_filt.sort_values("antecedencia", ascending=False)[cols_to_show], 
-        use_container_width=True, 
-        hide_index=True,
-        column_config=col_config
-    )
-
-# ── FUNÇÃO 3: RESULTADOS ──────────────────────────────────────────────────────
-def render_resultados(df_g_raw: pd.DataFrame, df_d_raw: pd.DataFrame):
-    st.markdown("""
-    <div class="pg-header">
-      <div>
-        <div class="pg-eyebrow">Performance</div>
-        <div class="pg-title">Resultados do Corpus Christi</div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    if df_g_raw.empty or df_d_raw.empty:
-        st.info("Nenhum dado encontrado.")
-        return
-
-    df_g = df_g_raw.copy()
-    df_d = df_d_raw.copy()
-    df_g['metrica'] = df_g['metrica'].str.replace(' \(Capacidade x Km\)', '', regex=True).str.replace(' \(Pax x Km\)', '', regex=True)
-    df_d['metrica'] = df_d['metrica'].str.replace(' \(Capacidade x Km\)', '', regex=True).str.replace(' \(Pax x Km\)', '', regex=True)
-
-    def format_kpi(metrica, valor):
-        if pd.isna(valor): return "-"
-        if "Load Factor" in metrica: return f"{valor*100:.1f}%"
-        if "RASK" in metrica or "Yield" in metrica: return f"R$ {valor:.3f}".replace(".", ",")
-        if "Ticket Médio" in metrica or "GMV" in metrica: return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-        return f"{int(valor):,}".replace(",", ".")
-
-    def format_delta(atual, passado):
-        if pd.isna(atual) or pd.isna(passado) or passado == 0: return "-"
-        var = (atual / passado) - 1
-        return f"{'+' if var > 0 else ''}{var * 100:.1f}%"
-
-    col_t, col_f = st.columns([3, 1])
-    with col_t:
-        st.markdown('<div class="section-title">Visão Consolidada</div>', unsafe_allow_html=True)
-    with col_f:
-        opcoes_data = ["Consolidado Feriado", "Ida e Volta Forte", "Dias Fracos"]
-        if 'data' in df_d.columns:
-            opcoes_data.extend(sorted(df_d['data'].dropna().unique()))
-        
-        filtro_data = st.selectbox(
-            "Filtro de Data:", 
-            options=opcoes_data, 
-            format_func=lambda x: pd.to_datetime(x).strftime('%d/%m/%Y') if x not in ["Consolidado Feriado", "Ida e Volta Forte", "Dias Fracos"] else x,
-            label_visibility="collapsed"
-        )
-
-    st.write("") 
-    
-    if filtro_data == "Consolidado Feriado":
-        df_view = df_g.copy()
-        
-    elif filtro_data in ["Ida e Volta Forte", "Dias Fracos"]:
-        datas_fortes = [data_ancora_ida, data_ancora_volta]
-        
-        if filtro_data == "Ida e Volta Forte":
-            df_filtrado = df_d[df_d['data'].isin(datas_fortes)].copy()
-        else: 
-            df_filtrado = df_d[~df_d['data'].isin(datas_fortes)].copy()
-
-        if not df_filtrado.empty:
-            df_filtrado['metrica_limpa'] = df_filtrado['metrica'].apply(lambda x: str(x).split('. ', 1)[-1].strip())
-            df_piv = df_filtrado.pivot_table(index='data', columns='metrica_limpa', values=['atual', 'pascoa_2026'], aggfunc='sum')
-            somas = df_piv.sum() 
-            
-            def get_val(cenario, metrica):
-                try: return float(somas[(cenario, metrica)])
-                except: return 0.0
-
-            rows = []
-            for m_orig in df_g['metrica'].unique():
-                m_limpa = str(m_orig).split('. ', 1)[-1].strip()
-                
-                if m_limpa == "Yield":
-                    v_atual = get_val('atual', 'GMV') / get_val('atual', 'RPK') if get_val('atual', 'RPK') else 0
-                    v_ref = get_val('pascoa_2026', 'GMV') / get_val('pascoa_2026', 'RPK') if get_val('pascoa_2026', 'RPK') else 0
-                elif m_limpa == "Load Factor":
-                    v_atual = get_val('atual', 'RPK') / get_val('atual', 'ASK') if get_val('atual', 'ASK') else 0
-                    v_ref = get_val('pascoa_2026', 'RPK') / get_val('pascoa_2026', 'ASK') if get_val('pascoa_2026', 'ASK') else 0
-                elif m_limpa == "Ticket Médio":
-                    v_atual = get_val('atual', 'GMV') / get_val('atual', 'Pax Total') if get_val('atual', 'Pax Total') else 0
-                    v_ref = get_val('pascoa_2026', 'GMV') / get_val('pascoa_2026', 'Pax Total') if get_val('pascoa_2026', 'Pax Total') else 0
-                elif m_limpa == "RASK":
-                    v_atual = get_val('atual', 'GMV') / get_val('atual', 'ASK') if get_val('atual', 'ASK') else 0
-                    v_ref = get_val('pascoa_2026', 'GMV') / get_val('pascoa_2026', 'ASK') if get_val('pascoa_2026', 'ASK') else 0
-                else:
-                    v_atual = get_val('atual', m_limpa)
-                    v_ref = get_val('pascoa_2026', m_limpa)
-                
-                rows.append({'metrica': m_orig, 'atual': v_atual, 'pascoa_2026': v_ref})
-            df_view = pd.DataFrame(rows)
-        else:
-            df_view = df_g.copy() 
-            
-    else: 
-        df_view = df_d[df_d['data'] == filtro_data].copy()
-    
-    cols = st.columns(5)
-    for i, row in enumerate(df_view.to_dict('records')):
-        nome = str(row.get('metrica', '')).split('. ', 1)[-1]
-        cols[i % 5].metric(label=nome, value=format_kpi(nome, row.get('atual')), delta=format_delta(row.get('atual'), row.get('pascoa_2026')))
-
-    st.markdown('<div class="section-label" style="margin-top: 0.5rem; margin-bottom: 0.5rem;">Comparativo Direto (Absolutos)</div>', unsafe_allow_html=True)
-    df_tg = df_view.copy()
-    df_tg['Métrica'] = df_tg['metrica'].apply(lambda x: str(x).split('. ', 1)[-1])
-    df_tg['Páscoa 2026'] = df_tg.apply(lambda row: format_kpi(row['Métrica'], row['pascoa_2026']), axis=1)
-    df_tg['Atual'] = df_tg.apply(lambda row: format_kpi(row['Métrica'], row['atual']), axis=1)
-    df_tg['Var %'] = df_tg.apply(lambda row: format_delta(row['atual'], row['pascoa_2026']), axis=1)
-    st.dataframe(df_tg[['Métrica', 'Páscoa 2026', 'Atual', 'Var %']], use_container_width=True, hide_index=True)
-
-
-# ── FUNÇÃO 4: HISTÓRICO DE ALTERAÇÕES ─────────────────────────────────────────
+# ── FUNÇÃO 2: HISTÓRICO DE ALTERAÇÕES ─────────────────────────────────────────
 def render_historico():
     st.markdown("""
     <div class="pg-header">
       <div>
         <div class="pg-eyebrow">Acompanhamento</div>
-        <div class="pg-title">Histórico de Alterações</div>
+        <div class="pg-title"><span class="live-dot"></span>Histórico de Alterações</div>
       </div>
     </div>
     """, unsafe_allow_html=True)
@@ -806,13 +510,11 @@ def render_historico():
                     mask = df_hist.astype(str).apply(lambda x: x.str.contains(busca_livre, case=False, na=False)).any(axis=1)
                     df_hist = df_hist[mask]
             
-            st.markdown('<div class="section-label">Tabela de Ações (Permanente)</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-label" style="margin-top: 1.5rem;">Tabela de Ações (Permanente)</div>', unsafe_allow_html=True)
             st.dataframe(df_hist, use_container_width=True, hide_index=True)
         else:
             st.info("Nenhuma alteração de preço registrada no histórico ainda. Suas alterações na aba 'Editor de Preços' aparecerão aqui.")
 
 # ── RENDERIZAÇÃO FINAL DAS ABAS ─────────────────────────
-with tab1: render_resultados(df_geral_raw, df_dia_raw)
-with tab2: render_rota_antecedencia(df_rota_raw)
-with tab3: render_editor(df_editor_raw, tab_key="t3", titulo="Corpus Christi")
-with tab4: render_historico()
+with tab1: render_editor(df_editor_raw, tab_key="t3", titulo="Editor de Preços")
+with tab2: render_historico()

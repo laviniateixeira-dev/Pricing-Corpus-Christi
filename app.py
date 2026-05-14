@@ -27,7 +27,7 @@ ref_1         = "pascoa_2026"
 ref_2         = "consciencia_2025" 
 ref_3         = "corpus_2025"
 
-# OS SEUS LINKS DO GITHUB 
+# OS SEUS LINKS DO GITHUB (Mantido apenas o necessário para o Editor)
 GITHUB_RAW_CURVA = f"https://raw.githubusercontent.com/laviniateixeira-dev/Pricing-Corpus-Christi/main/data/curva_{feriado_atual}.csv"
 # ==========================================
 
@@ -37,7 +37,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS PREMIUM VIBRANTE: FILTROS FIÉIS À IMAGEM ---
+# --- CSS PREMIUM VIBRANTE: FILTROS ADAPTATIVOS (LIGHT/DARK) ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
@@ -45,10 +45,7 @@ st.markdown("""
 /* Variáveis da Marca Buser */
 :root {
   --buser-pink: #FF3377;
-  --buser-pink-light: #FF66A3;
   --buser-pink-transp: rgba(255, 51, 119, 0.15);
-  --filter-bg: #0F050A; /* Fundo super escuro (quase preto) para os filtros */
-  --tag-bg: #3D1225;    /* Fundo vinho para as pílulas (tags) */
 }
 
 /* Tipografia Global */
@@ -96,61 +93,62 @@ h1, h2, h3, .pg-title, .section-title {
   margin-bottom: 8px; margin-top: 2rem; 
 }
 
-/* ── ESTILIZAÇÃO IDÊNTICA À IMAGEM PARA SELECT, MULTISELECT E TEXT INPUT ── */
+/* ── ESTILIZAÇÃO ADAPTATIVA PARA SELECT, MULTISELECT E TEXT INPUT ── */
 
-/* Fundo base da caixa de seleção e input de texto */
+/* Fundo base transparente para herdar o tema do Streamlit (Branco ou Cinza Escuro) */
 [data-testid="stMultiSelect"] [data-baseweb="select"] > div,
 [data-testid="stSelectbox"] [data-baseweb="select"] > div,
 [data-testid="stTextInput"] input {
-    background-color: var(--filter-bg) !important; 
+    background-color: transparent !important; 
     border: 1px solid var(--buser-pink) !important; 
     border-radius: 6px !important;
     min-height: 42px !important;
-    color: var(--buser-pink-light) !important; /* Cor do texto digitado/selecionado */
+    color: var(--buser-pink) !important;
 }
 
-/* Cor do texto para inputs simples e placeholder */
+/* Cor do texto para placeholder */
 [data-testid="stTextInput"] input::placeholder {
-    color: rgba(255, 102, 163, 0.5) !important;
+    color: rgba(255, 51, 119, 0.5) !important;
 }
 
 /* Estilo do texto dentro do Selectbox normal */
 [data-testid="stSelectbox"] [data-baseweb="select"] span, 
-[data-testid="stSelectbox"] [data-baseweb="select"] div {
-    color: var(--buser-pink-light) !important;
+[data-testid="stSelectbox"] [data-baseweb="select"] div,
+[data-testid="stMultiSelect"] [data-baseweb="select"] span, 
+[data-testid="stMultiSelect"] [data-baseweb="select"] div {
+    color: var(--buser-pink) !important;
     font-weight: 600 !important;
 }
 
 /* ── TAGS DO MULTISELECT (As "Pílulas") ── */
 [data-baseweb="tag"] {
-  background-color: var(--tag-bg) !important; /* Vinho escuro */
-  border: 1px solid var(--buser-pink) !important; /* Borda rosa fina */
+  background-color: var(--buser-pink) !important; /* Fundo Rosa Buser Sólido */
+  border: none !important;
   border-radius: 4px !important;
   margin-top: 4px !important;
   margin-bottom: 4px !important;
 }
 [data-baseweb="tag"] span {
-  color: #FFFFFF !important; /* Letra branca/bem clara igual na imagem */
+  color: #FFFFFF !important; /* Letra branca sempre legível */
   font-weight: 800 !important;
   font-size: 0.8rem !important;
 }
-
 /* Ícone de fechar "x" na tag */
 [data-baseweb="tag"] svg {
-  color: var(--buser-pink-light) !important;
+  color: #FFFFFF !important;
 }
 
 /* Dropdown (O menu que abre ao clicar) */
 [data-baseweb="popover"] [data-baseweb="menu"] {
-    background-color: var(--filter-bg) !important;
+    background-color: var(--background-color) !important; /* Herda o tema do Streamlit */
     border: 1px solid var(--buser-pink) !important;
 }
 [data-baseweb="option"] {
-    color: var(--buser-pink-light) !important;
-    font-weight: 500 !important;
+    color: var(--buser-pink) !important;
+    font-weight: 600 !important;
 }
 [data-baseweb="option"]:hover, [aria-selected="true"][data-baseweb="option"] {
-    background-color: var(--tag-bg) !important; 
+    background-color: var(--buser-pink-transp) !important; /* Destaque rosa clarinho/translúcido no hover */
 }
 
 /* ── BOTÕES GERAIS E ABAS ── */

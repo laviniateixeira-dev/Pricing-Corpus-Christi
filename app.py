@@ -6,13 +6,19 @@ import io
 import base64
 import json
 import plotly.express as px
+import os
 from datetime import datetime
 
 # ==========================================
-# INICIALIZAÇÃO DE SESSÃO GERAL (HISTÓRICO)
+# INICIALIZAÇÃO DE SESSÃO GERAL (HISTÓRICO PERMANENTE)
 # ==========================================
+ARQUIVO_HISTORICO = "historico_pricing.csv"
+
 if 'history_df' not in st.session_state:
-    st.session_state['history_df'] = pd.DataFrame()
+    if os.path.exists(ARQUIVO_HISTORICO):
+        st.session_state['history_df'] = pd.read_csv(ARQUIVO_HISTORICO)
+    else:
+        st.session_state['history_df'] = pd.DataFrame()
 
 # ==========================================
 # CONFIGURAÇÕES DO FERIADO
@@ -345,7 +351,8 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
                 st.session_state[key_enviadas] = set()
                 st.rerun()
 
-    cols_editor = ["row_id", "data", "antecedencia", "rota_principal", "sentido", "tipo_assento", "turno", f"buscas_{ref_1}", "buscas_atual", f"grupos_{ref_1}", "grupos_atual", "pax", "capacidade_atual", "vagas_restantes", f"lf_{ref_1}", "load_factor_atual", f"ratio_lf_{ref_1}", f"tkm_{ref_1}", "tkm_atual", "price_cc", "mult_atual_aplicado", "mult_flutuacao", "preco_flutuacao", "preco_cenario_atual", "preco_atual_bucket", "max_split", "preco_maximo_feriado"]
+    # --- ADICIONADO DATA_ATUALIZACAO AQUI ---
+    cols_editor = ["row_id", "data", "antecedencia", "rota_principal", "sentido", "tipo_assento", "turno", f"buscas_{ref_1}", "buscas_atual", f"grupos_{ref_1}", "grupos_atual", "pax", "capacidade_atual", "vagas_restantes", f"lf_{ref_1}", "load_factor_atual", f"ratio_lf_{ref_1}", f"tkm_{ref_1}", "tkm_atual", "price_cc", "mult_atual_aplicado", "mult_flutuacao", "preco_flutuacao", "preco_cenario_atual", "preco_atual_bucket", "max_split", "preco_maximo_feriado", "data_atualizacao"]
     cols_presentes = [c for c in cols_editor if c in df_cv_editor.columns]
     df_editor = df_cv_editor[cols_presentes].copy()
 
@@ -358,12 +365,13 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
     df_editor["incluir"] = df_editor["row_id"].map(lambda x: st.session_state[dict_key].get(x, {}).get("incluir", True))
     df_editor["Preco novo"] = df_editor["row_id"].map(lambda x: st.session_state[dict_key].get(x, {}).get("Preco novo", None))
 
+    # --- ADICIONADO DATA_ATUALIZACAO AQUI NO FINAL ---
     show_cols = [
         "incluir", "data_fmt", "antecedencia", "rota_principal", "sentido", 
         "tipo_assento", "turno", f"buscas_{ref_1}", "buscas_atual", 
         "pax", "capacidade_atual", "vagas_restantes", "lf_r1_fmt", "lf_a_fmt", 
         "ratio_r1_fmt", f"tkm_{ref_1}", "tkm_atual", "price_cc", "mult_atual_aplicado", 
-        "preco_cenario_atual", "mult_flutuacao", "preco_flutuacao", "preco_maximo_feriado", "Preco novo"
+        "preco_cenario_atual", "mult_flutuacao", "preco_flutuacao", "preco_maximo_feriado", "Preco novo", "data_atualizacao"
     ]
     show_cols = [c for c in show_cols if c in df_editor.columns or c in ["incluir", "Preco novo"]]
     df_show = df_editor[show_cols].copy()
@@ -393,6 +401,7 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         "preco_flutuacao": st.column_config.NumberColumn("Preço Flutuação", disabled=True, format="R$ %.2f"),
         "preco_maximo_feriado": st.column_config.NumberColumn("Teto Flutuação", disabled=True, format="R$ %.2f"),
         "Preco novo": st.column_config.NumberColumn("Preço Novo", min_value=0.0, format="R$ %.2f"),
+        "data_atualizacao": st.column_config.TextColumn("Data Atualização", disabled=True), # <-- CONFIG DA COLUNA
     }
 
     st.markdown('<div class="section-label">Planilha de Edição</div>', unsafe_allow_html=True)
@@ -456,6 +465,8 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
                 df_hist_new = df_export.copy()
                 df_hist_new["Data Alteração"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                 st.session_state['history_df'] = pd.concat([st.session_state['history_df'], df_hist_new], ignore_index=True)
+                # --- SALVANDO NO ARQUIVO LOCAL PARA FIXAR ---
+                st.session_state['history_df'].to_csv(ARQUIVO_HISTORICO, index=False)
 
                 for r_id in df_acionamento["row_id"]:
                     st.session_state[key_enviadas].add(r_id)
@@ -639,7 +650,6 @@ def render_resultados(df_g_raw: pd.DataFrame, df_d_raw: pd.DataFrame):
         st.info("Nenhum dado encontrado.")
         return
 
-    # Limpeza dos nomes das métricas
     df_g = df_g_raw.copy()
     df_d = df_d_raw.copy()
     df_g['metrica'] = df_g['metrica'].str.replace(' \(Capacidade x Km\)', '', regex=True).str.replace(' \(Pax x Km\)', '', regex=True)
@@ -759,6 +769,8 @@ def render_historico():
                         df_up = pd.read_csv(uploaded_file)
                         df_up["Data Alteração"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                         st.session_state['history_df'] = pd.concat([st.session_state['history_df'], df_up], ignore_index=True)
+                        # --- SALVANDO NO ARQUIVO LOCAL PARA FIXAR ---
+                        st.session_state['history_df'].to_csv(ARQUIVO_HISTORICO, index=False)
                         st.success("Tudo certo! Adicionado à tabela.")
                         st.rerun()
                     except Exception as e:
@@ -767,14 +779,37 @@ def render_historico():
                     st.warning("Selecione um arquivo primeiro.")
                     
     with col_hist_1:
-        st.markdown('<div class="section-label" style="margin-top:0;">Tabela de Ações (Sessão Atual)</div>', unsafe_allow_html=True)
-        if st.session_state['history_df'].empty:
-            st.info("Nenhuma alteração de preço registrada no histórico ainda. Suas alterações na aba 'Editor de Preços' aparecerão aqui.")
+        st.markdown('<div class="section-label" style="margin-top:0;">Filtros de Pesquisa</div>', unsafe_allow_html=True)
+        
+        df_hist = st.session_state['history_df'].copy()
+        
+        if not df_hist.empty:
+            col_fh1, col_fh2, col_fh3 = st.columns(3)
+            
+            with col_fh1:
+                if 'rota_principal' in df_hist.columns:
+                    rotas_h = ["Todas"] + sorted(df_hist['rota_principal'].dropna().unique().tolist())
+                    rota_h_sel = st.selectbox("Rota", rotas_h, key="hist_rota")
+                    if rota_h_sel != "Todas":
+                        df_hist = df_hist[df_hist['rota_principal'] == rota_h_sel]
+                        
+            with col_fh2:
+                if 'sentido' in df_hist.columns:
+                    sentidos_h = ["Todos"] + sorted(df_hist['sentido'].dropna().unique().tolist())
+                    sentido_h_sel = st.selectbox("Sentido", sentidos_h, key="hist_sentido")
+                    if sentido_h_sel != "Todos":
+                        df_hist = df_hist[df_hist['sentido'] == sentido_h_sel]
+                        
+            with col_fh3:
+                busca_livre = st.text_input("Busca Livre", placeholder="Pesquise por qualquer termo...")
+                if busca_livre:
+                    mask = df_hist.astype(str).apply(lambda x: x.str.contains(busca_livre, case=False, na=False)).any(axis=1)
+                    df_hist = df_hist[mask]
+            
+            st.markdown('<div class="section-label">Tabela de Ações (Permanente)</div>', unsafe_allow_html=True)
+            st.dataframe(df_hist, use_container_width=True, hide_index=True)
         else:
-            st.dataframe(st.session_state['history_df'], use_container_width=True, hide_index=True)
-            if st.button("Limpar Histórico", use_container_width=False):
-                st.session_state['history_df'] = pd.DataFrame()
-                st.rerun()
+            st.info("Nenhuma alteração de preço registrada no histórico ainda. Suas alterações na aba 'Editor de Preços' aparecerão aqui.")
 
 # ── RENDERIZAÇÃO FINAL DAS ABAS ─────────────────────────
 with tab1: render_resultados(df_geral_raw, df_dia_raw)

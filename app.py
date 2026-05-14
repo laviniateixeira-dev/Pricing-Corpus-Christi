@@ -27,7 +27,7 @@ ref_1         = "pascoa_2026"
 ref_2         = "consciencia_2025" 
 ref_3         = "corpus_2025"
 
-# OS SEUS LINKS DO GITHUB (Mantido apenas o necessário para o Editor)
+# OS SEUS LINKS DO GITHUB
 GITHUB_RAW_CURVA = f"https://raw.githubusercontent.com/laviniateixeira-dev/Pricing-Corpus-Christi/main/data/curva_{feriado_atual}.csv"
 # ==========================================
 
@@ -37,7 +37,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS PREMIUM VIBRANTE: FILTROS ADAPTATIVOS (LIGHT/DARK) ---
+# --- CSS PREMIUM VIBRANTE: ADAPTATIVO (LIGHT/DARK) + BUG DAS TAGS CORRIGIDO ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
@@ -49,7 +49,7 @@ st.markdown("""
 }
 
 /* Tipografia Global */
-html, body, [class*="css"], [data-testid="stMetricLabel"] p {
+html, body, [class*="css"] {
   font-family: 'DM Sans', sans-serif !important;
 }
 h1, h2, h3, .pg-title, .section-title {
@@ -94,8 +94,6 @@ h1, h2, h3, .pg-title, .section-title {
 }
 
 /* ── ESTILIZAÇÃO ADAPTATIVA PARA SELECT, MULTISELECT E TEXT INPUT ── */
-
-/* Fundo base transparente para herdar o tema do Streamlit (Branco ou Cinza Escuro) */
 [data-testid="stMultiSelect"] [data-baseweb="select"] > div,
 [data-testid="stSelectbox"] [data-baseweb="select"] > div,
 [data-testid="stTextInput"] input {
@@ -103,44 +101,44 @@ h1, h2, h3, .pg-title, .section-title {
     border: 1px solid var(--buser-pink) !important; 
     border-radius: 6px !important;
     min-height: 42px !important;
-    color: var(--buser-pink) !important;
 }
 
-/* Cor do texto para placeholder */
+/* Força a cor do texto do placeholder e input de texto para rosa */
+[data-testid="stTextInput"] input,
 [data-testid="stTextInput"] input::placeholder {
-    color: rgba(255, 51, 119, 0.5) !important;
-}
-
-/* Estilo do texto dentro do Selectbox normal */
-[data-testid="stSelectbox"] [data-baseweb="select"] span, 
-[data-testid="stSelectbox"] [data-baseweb="select"] div,
-[data-testid="stMultiSelect"] [data-baseweb="select"] span, 
-[data-testid="stMultiSelect"] [data-baseweb="select"] div {
     color: var(--buser-pink) !important;
     font-weight: 600 !important;
 }
 
-/* ── TAGS DO MULTISELECT (As "Pílulas") ── */
-[data-baseweb="tag"] {
-  background-color: var(--buser-pink) !important; /* Fundo Rosa Buser Sólido */
+/* Força a cor do texto padrão nos selects para rosa */
+[data-testid="stSelectbox"] [data-baseweb="select"] *,
+[data-testid="stMultiSelect"] [data-baseweb="select"] * {
+    color: var(--buser-pink) !important;
+    font-weight: 600 !important;
+}
+
+/* ── CORREÇÃO DO BUG: TAGS DO MULTISELECT (As "Pílulas") ── */
+[data-testid="stMultiSelect"] [data-baseweb="tag"] {
+  background-color: var(--buser-pink) !important; /* Fundo Rosa Sólido */
   border: none !important;
   border-radius: 4px !important;
   margin-top: 4px !important;
   margin-bottom: 4px !important;
 }
-[data-baseweb="tag"] span {
-  color: #FFFFFF !important; /* Letra branca sempre legível */
+/* A regra abaixo obriga qualquer texto ou ícone dentro da tag a ser branco */
+[data-testid="stMultiSelect"] [data-baseweb="tag"] span,
+[data-testid="stMultiSelect"] [data-baseweb="tag"] div,
+[data-testid="stMultiSelect"] [data-baseweb="tag"] svg,
+[data-testid="stMultiSelect"] [data-baseweb="tag"] * {
+  color: #FFFFFF !important; 
+  fill: #FFFFFF !important;
   font-weight: 800 !important;
-  font-size: 0.8rem !important;
-}
-/* Ícone de fechar "x" na tag */
-[data-baseweb="tag"] svg {
-  color: #FFFFFF !important;
+  font-size: 0.85rem !important;
 }
 
-/* Dropdown (O menu que abre ao clicar) */
+/* Dropdown (Menu que abre ao clicar) */
 [data-baseweb="popover"] [data-baseweb="menu"] {
-    background-color: var(--background-color) !important; /* Herda o tema do Streamlit */
+    background-color: var(--background-color) !important; 
     border: 1px solid var(--buser-pink) !important;
 }
 [data-baseweb="option"] {
@@ -148,7 +146,7 @@ h1, h2, h3, .pg-title, .section-title {
     font-weight: 600 !important;
 }
 [data-baseweb="option"]:hover, [aria-selected="true"][data-baseweb="option"] {
-    background-color: var(--buser-pink-transp) !important; /* Destaque rosa clarinho/translúcido no hover */
+    background-color: var(--buser-pink-transp) !important; 
 }
 
 /* ── BOTÕES GERAIS E ABAS ── */
@@ -167,6 +165,7 @@ h1, h2, h3, .pg-title, .section-title {
     color: white !important;
 }
 
+/* Tabelas e Abas */
 [data-testid="stDataTable"] {
   border: 1px solid rgba(150, 150, 150, 0.2) !important;
   border-radius: 8px !important;
@@ -182,7 +181,7 @@ h1, h2, h3, .pg-title, .section-title {
   font-weight: 700 !important;
 }
 
-/* Banners (Avisos de linhas enviadas) */
+/* Banners de Sucesso/Aviso */
 .acion-banner {
   display: flex; align-items: center; background-color: rgba(16, 185, 129, 0.1); 
   border: 1px solid rgba(16, 185, 129, 0.3); border-left: 4px solid #10B981; 

@@ -96,11 +96,17 @@ h1, h2, h3, .pg-title, .section-title {
 /* ── ESTILIZAÇÃO ADAPTATIVA PARA SELECT, MULTISELECT E TEXT INPUT ── */
 [data-testid="stMultiSelect"] [data-baseweb="select"] > div,
 [data-testid="stSelectbox"] [data-baseweb="select"] > div,
-[data-testid="stTextInput"] input {
+[data-testid="stTextInput"] div[data-baseweb="input"] {
     background-color: transparent !important; 
     border: 1px solid var(--buser-pink) !important; 
     border-radius: 6px !important;
     min-height: 42px !important;
+}
+
+/* Remove a borda e background padrão do input interno para não duplicar o estilo */
+[data-testid="stTextInput"] input {
+    background-color: transparent !important;
+    border: none !important;
 }
 
 /* Força a cor do texto do placeholder e input de texto para rosa */
@@ -108,6 +114,7 @@ h1, h2, h3, .pg-title, .section-title {
 [data-testid="stTextInput"] input::placeholder {
     color: var(--buser-pink) !important;
     font-weight: 600 !important;
+    -webkit-text-fill-color: var(--buser-pink) !important; /* Força a cor do placeholder em alguns navegadores */
 }
 
 /* Força a cor do texto padrão nos selects para rosa */

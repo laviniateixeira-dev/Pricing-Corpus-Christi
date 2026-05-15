@@ -1,4 +1,4 @@
-data_ref_pascoa_2026,data,dia_da_semana,antecedencia,rota_principal,sentido,tipo_assento,turno,buscas_pascoa_2026,buscas_atual,pax,capacidade_atual,vagas_restantes,lf_pascoa_2026,load_factor_atual,ratio_lf_pascoa_2026,tkm_pascoa_2026,tkm_atual,price_cc,mult_final,data_atualizacao,preco_cenario_atual,mult_flutuacao,preco_flutuacao,preco_maximo_feriado
+data_ref_pascoa_2026,data,dia_da_semana,antecedencia,rota_principal,sentido,tipo_assento,turno,buscas_pascoa_2026,buscas_atual,pax,capacidade_atual,vagas_restantes,lf_pascoa_2026,load_factor_atual,ratio_lf_pascoa_2026,tkm_pascoa_2026,tkm_atual,price_cc,mult_atual_aplicado,data_atualizacao,preco_cenario_atual,mult_flutuacao,preco_flutuacao,preco_maximo_feriado
 2026-04-01,2026-06-02,3,18,ANG-BHZ,ANG-BHZ,semi leito,NOITE,43.0,14.0,3,43,40,0.0435,0.0604,1.3885,99.71,128.9,0.0,0.0,,0.0,0.0,160.9,474.28
 2026-04-02,2026-06-03,4,19,ANG-BHZ,ANG-BHZ,semi leito,NOITE,51.0,71.0,6,46,40,0.2257,0.1246,0.5521,193.01,143.57,0.0,0.0,,0.0,0.0,160.9,474.28
 2026-04-03,2026-06-04,5,20,ANG-BHZ,ANG-BHZ,semi leito,NOITE,30.0,29.0,5,43,38,0.3543,0.0918,0.2591,158.82,111.1,0.0,1.01,,146.9,1.0,146.9,474.28
@@ -1195,7 +1195,7 @@ data_ref_pascoa_2026,data,dia_da_semana,antecedencia,rota_principal,sentido,tipo
 2026-04-03,2026-06-04,5,20,BHZ-VIX,VIX-BHZ,leito,NOITE,242.0,303.0,7,86,79,0.3591,0.0811,0.2258,183.65,135.05,0.0,1.0,,115.9,0.95,110.11,487.5
 2026-04-03,2026-06-04,5,20,BHZ-VIX,VIX-BHZ,semi leito,NOITE,242.0,303.0,21,162,141,0.3539,0.1363,0.3851,146.11,88.99,139.6,1.0,,115.9,0.95,110.11,487.5
 2026-04-04,2026-06-05,6,21,BHZ-VIX,VIX-BHZ,leito,NOITE,195.0,200.0,2,77,75,0.3591,0.0454,0.1264,183.65,122.9,0.0,1.0,,115.9,0.9,104.31,487.5
-2026-04-04,2026-06-05,6,21,BHZ-VIX,VIX-BHZ,semi leito,NOITE,195.0,200.0,20,213,193,0.3539,0.0832,0.2351,146.11,95.9,155.5,1.0,,115.9,0.9,104.31,487.5
+2026-04-04,2026-06-05,6,21,BHZ-VIX,VIX-BHZ,semi leito,NOITE,195.0,200.0,20,213,193,0.3539,0.0833,0.2354,146.11,95.9,155.5,1.0,,115.9,0.9,104.31,487.5
 2026-04-04,2026-06-06,7,22,BHZ-VIX,VIX-BHZ,leito,NOITE,187.0,170.0,14,43,29,0.3315,0.3211,0.9686,183.65,201.04,0.0,1.39,,154.9,1.26,195.17,487.5
 2026-04-04,2026-06-06,7,22,BHZ-VIX,VIX-BHZ,semi leito,NOITE,187.0,170.0,33,57,24,0.3539,0.516,1.458,146.11,149.11,157.22,1.39,,154.9,1.26,195.17,487.5
 2026-04-05,2026-06-07,1,23,BHZ-VIX,VIX-BHZ,leito,NOITE,666.0,450.0,28,86,58,0.0621,0.3181,5.1224,319.05,261.69,0.0,1.39,,194.9,1.1,214.39,487.5

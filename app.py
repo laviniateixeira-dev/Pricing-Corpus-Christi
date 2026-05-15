@@ -119,19 +119,19 @@ h1, h2, h3, .pg-title, .section-title {
 
 /* ── CORREÇÃO DO BUG: TAGS DO MULTISELECT (As "Pílulas") ── */
 [data-testid="stMultiSelect"] [data-baseweb="tag"] {
-  background-color: var(--buser-pink) !important; /* Fundo Rosa Sólido */
-  border: none !important;
+  background-color: transparent !important; /* Fundo invisível para acompanhar o Light/Dark mode */
+  border: 1px solid var(--buser-pink) !important; /* Borda rosa para dar contorno */
   border-radius: 4px !important;
   margin-top: 4px !important;
   margin-bottom: 4px !important;
 }
-/* A regra abaixo obriga qualquer texto ou ícone dentro da tag a ser branco */
+/* A regra abaixo obriga qualquer texto ou ícone dentro da tag a ser rosa */
 [data-testid="stMultiSelect"] [data-baseweb="tag"] span,
 [data-testid="stMultiSelect"] [data-baseweb="tag"] div,
 [data-testid="stMultiSelect"] [data-baseweb="tag"] svg,
 [data-testid="stMultiSelect"] [data-baseweb="tag"] * {
-  color: #FFFFFF !important; 
-  fill: #FFFFFF !important;
+  color: var(--buser-pink) !important; 
+  fill: var(--buser-pink) !important;
   font-weight: 800 !important;
   font-size: 0.85rem !important;
 }

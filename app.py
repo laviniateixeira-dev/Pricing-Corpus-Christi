@@ -229,64 +229,98 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
 
     # Define dinamicamente quais colunas usar da tabela baseada na seleção
     cols_editor = [
-        "row_id", "data_atual", "antecedencia", "rota_principal", "sentido", "tipo_assento", "turno", 
+        "row_id", f"data_ref_{ref_sel}", "data_atual", "dia_da_semana", "antecedencia", 
+        "rota_principal", "sentido", "tipo_assento", "turno", 
         f"buscas_{ref_sel}", "buscas_corpus_2026", "pax_atual", "capacidade_atual", "vagas_restantes", 
-        f"lf_{ref_sel}", "lf_atual", f"ratio_lf_{ref_sel}", f"tkm_{ref_sel}", "tkm_atual", 
-        "price_cc", "mult_atual_aplicado", "mult_flutuacao", "preco_flutuacao", "preco_cenario_atual", 
+        f"lf_{ref_sel}", "lf_atual", f"ratio_lf_{ref_sel}", "price_cc", f"tkm_{ref_sel}", "tkm_atual", 
+        "mult_atual_aplicado", "preco_cenario_atual", "mult_flutuacao", "preco_flutuacao", 
         "preco_maximo_feriado", "data_atualizacao"
     ]
     cols_presentes = [c for c in cols_editor if c in df_cv_editor.columns]
     df_editor = df_cv_editor[cols_presentes].copy()
 
+    # Formatações Visuais das Colunas
     df_editor["data_fmt"] = pd.to_datetime(df_editor["data_atual"]).dt.strftime("%d/%m/%Y")
     
+    if f"data_ref_{ref_sel}" in df_editor.columns:
+        df_editor["data_ref_fmt"] = pd.to_datetime(df_editor[f"data_ref_{ref_sel}"], errors="coerce").dt.strftime("%d/%m/%Y").fillna("-")
+
     if f"ratio_lf_{ref_sel}" in df_editor.columns: 
         df_editor["ratio_ref_fmt"] = df_editor[f"ratio_lf_{ref_sel}"].astype(float).round(3).astype(str) + "x"
+    
     if f"lf_{ref_sel}" in df_editor.columns: 
         df_editor["lf_ref_fmt"] = (df_editor[f"lf_{ref_sel}"] * 100).astype(float).round(1).astype(str) + "%"
+    
     if "lf_atual" in df_editor.columns: 
         df_editor["lf_a_fmt"] = (df_editor["lf_atual"] * 100).astype(float).round(1).astype(str) + "%"
 
     df_editor["incluir"] = df_editor["row_id"].map(lambda x: st.session_state[dict_key].get(x, {}).get("incluir", True))
     df_editor["Preco novo"] = df_editor["row_id"].map(lambda x: st.session_state[dict_key].get(x, {}).get("Preco novo", None))
 
+    # ORDEM EXATA QUE VOCÊ PEDIU
     show_cols = [
-        "incluir", "data_fmt", "antecedencia", "rota_principal", "sentido", 
-        "tipo_assento", "turno", f"buscas_{ref_sel}", "buscas_corpus_2026", 
-        "pax_atual", "capacidade_atual", "vagas_restantes", "lf_ref_fmt", "lf_a_fmt", 
-        "ratio_ref_fmt", f"tkm_{ref_sel}", "tkm_atual", "price_cc", "mult_atual_aplicado", 
-        "preco_cenario_atual", "mult_flutuacao", "preco_flutuacao", "preco_maximo_feriado", 
-        "Preco novo", "data_atualizacao"
+        "incluir", 
+        "data_ref_fmt", 
+        "data_fmt", 
+        "dia_da_semana", 
+        "antecedencia", 
+        "rota_principal", 
+        "sentido", 
+        "tipo_assento", 
+        "turno", 
+        f"buscas_{ref_sel}", 
+        "buscas_corpus_2026", 
+        "pax_atual", 
+        "capacidade_atual", 
+        "vagas_restantes", 
+        "lf_ref_fmt", 
+        "lf_a_fmt", 
+        "ratio_ref_fmt", 
+        "price_cc", 
+        f"tkm_{ref_sel}", 
+        "tkm_atual", 
+        "mult_atual_aplicado", 
+        "preco_cenario_atual", 
+        "mult_flutuacao", 
+        "preco_flutuacao", 
+        "preco_maximo_feriado", 
+        "data_atualizacao",
+        "Preco novo"
     ]
-    show_cols = [c for c in show_cols if c in df_editor.columns or c in ["incluir", "Preco novo"]]
-    df_show = df_editor[show_cols].copy()
+    
+    # Garante que só vai exibir as que realmente existirem no Dataframe processado
+    show_cols_safe = [c for c in show_cols if c in df_editor.columns or c in ["incluir", "Preco novo", "data_ref_fmt", "data_fmt", "lf_ref_fmt", "lf_a_fmt", "ratio_ref_fmt"]]
+    df_show = df_editor[show_cols_safe].copy()
 
+    # Configuração dos nomes que vão aparecer lá em cima do Editor
     col_config = {
         "incluir": st.column_config.CheckboxColumn("Incluir", default=True),
-        "data_fmt": st.column_config.TextColumn("Data", disabled=True),
+        "data_ref_fmt": st.column_config.TextColumn(f"Data Ref. ({ref_nome})", disabled=True),
+        "data_fmt": st.column_config.TextColumn("Data Atual", disabled=True),
+        "dia_da_semana": st.column_config.TextColumn("Dia Semana", disabled=True),
         "antecedencia": st.column_config.NumberColumn("Antec.", disabled=True),
         "rota_principal": st.column_config.TextColumn("Rota", disabled=True),
         "sentido": st.column_config.TextColumn("Sentido", disabled=True),
         "tipo_assento": st.column_config.TextColumn("Assento", disabled=True),
         "turno": st.column_config.TextColumn("Turno", disabled=True),
-        f"buscas_{ref_sel}": st.column_config.NumberColumn("Buscas Ref", disabled=True),
+        f"buscas_{ref_sel}": st.column_config.NumberColumn(f"Buscas ({ref_nome})", disabled=True),
         "buscas_corpus_2026": st.column_config.NumberColumn("Buscas Atual", disabled=True),
         "pax_atual": st.column_config.NumberColumn("PAX Atual", disabled=True),
         "capacidade_atual": st.column_config.NumberColumn("Capacidade", disabled=True),
         "vagas_restantes": st.column_config.NumberColumn("↑ Vagas", disabled=True),
-        "lf_ref_fmt": st.column_config.TextColumn("LF Referência", disabled=True),
+        "lf_ref_fmt": st.column_config.TextColumn(f"LF ({ref_nome})", disabled=True),
         "lf_a_fmt": st.column_config.TextColumn("LF Atual", disabled=True),
-        "ratio_ref_fmt": st.column_config.TextColumn("Ratio LF", disabled=True),
-        f"tkm_{ref_sel}": st.column_config.NumberColumn("TKM Ref", disabled=True, format="R$ %.0f"),
-        "tkm_atual": st.column_config.NumberColumn("TKM Atual", disabled=True, format="R$ %.0f"),
+        "ratio_ref_fmt": st.column_config.TextColumn(f"Ratio LF ({ref_nome})", disabled=True),
         "price_cc": st.column_config.NumberColumn("Price CC", disabled=True, format="R$ %.0f"),
+        f"tkm_{ref_sel}": st.column_config.NumberColumn(f"TKM ({ref_nome})", disabled=True, format="R$ %.0f"),
+        "tkm_atual": st.column_config.NumberColumn("TKM Atual", disabled=True, format="R$ %.0f"),
         "mult_atual_aplicado": st.column_config.NumberColumn("Mult Final", disabled=True, format="%.3fx"),
         "preco_cenario_atual": st.column_config.NumberColumn("Preço Cenario", disabled=True, format="R$ %.2f"),
         "mult_flutuacao": st.column_config.NumberColumn("Mult Flutuação", disabled=True, format="%.2fx"),
         "preco_flutuacao": st.column_config.NumberColumn("Preço Flutuação", disabled=True, format="R$ %.2f"),
         "preco_maximo_feriado": st.column_config.NumberColumn("Teto Flutuação", disabled=True, format="R$ %.2f"),
-        "Preco novo": st.column_config.NumberColumn("Preço Novo", min_value=0.0, format="R$ %.2f"),
         "data_atualizacao": st.column_config.TextColumn("Data Atualização", disabled=True), 
+        "Preco novo": st.column_config.NumberColumn("Preço Novo", min_value=0.0, format="R$ %.2f"),
     }
 
     st.markdown('<div class="section-label">Planilha de Edição</div>', unsafe_allow_html=True)
@@ -316,7 +350,6 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         n_excluidas = len(df_todas_edicoes) - len(df_editado)
 
         if not df_editado.empty:
-            # Proteção caso a coluna max_split não exista mais no novo schema do databricks
             p_flut = df_editado["preco_flutuacao"].astype(float) if "preco_flutuacao" in df_editado.columns else pd.Series(np.nan, index=df_editado.index)
             m_split = df_editado["max_split"].astype(float) if "max_split" in df_editado.columns else pd.Series(np.nan, index=df_editado.index)
             

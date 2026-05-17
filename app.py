@@ -105,7 +105,11 @@ def prep_editor(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty: return df
     df = df.copy()
     
-    # Atualizado com o novo schema de colunas Float
+    # Prevenção contra quebra se o arquivo no cache ainda for o antigo
+    if "data" in df.columns and "data_atual" not in df.columns:
+        df = df.rename(columns={"data": "data_atual"})
+    
+    # Colunas Float
     float_cols = [
         "lf_corpus_2025", "lf_pascoa_2026", "lf_maio_2026", "lf_atual",
         "ratio_lf_corpus_2025", "ratio_lf_pascoa_2026", "ratio_lf_maio_2026",
@@ -116,7 +120,7 @@ def prep_editor(df: pd.DataFrame) -> pd.DataFrame:
     for c in float_cols:
         if c in df.columns: df[c] = pd.to_numeric(df[c].replace("null", None), errors="coerce")
             
-    # Atualizado com o novo schema de colunas Int
+    # Colunas Int
     int_cols = [
         "antecedencia", "buscas_corpus_2025", "buscas_pascoa_2026", 
         "buscas_maio_2026", "buscas_corpus_2026", "pax_atual", 
@@ -179,7 +183,9 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         return
 
     def calc_row_id(row):
-        d_str = pd.to_datetime(row["data_atual"]).strftime("%Y-%m-%d") if pd.notna(row["data_atual"]) else ""
+        # Usa .get para não quebrar a tela se a coluna por algum motivo bizarro não existir
+        data_val = row.get("data_atual")
+        d_str = pd.to_datetime(data_val).strftime("%Y-%m-%d") if pd.notna(data_val) else ""
         return f"{d_str}|{row.get('turno','')}|{row.get('sentido','')}|{row.get('tipo_assento','')}"
 
     if "row_id" not in df_raw.columns:

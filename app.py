@@ -20,16 +20,10 @@ if 'history_df' not in st.session_state:
         st.session_state['history_df'] = pd.DataFrame()
 
 # ==========================================
-# CONFIGURAÇÕES DO FERIADO
+# CONFIGURAÇÕES DA PÁGINA E LINKS
 # ==========================================
 feriado_atual = "corpus_2026"
-ref_1         = "pascoa_2026"
-ref_2         = "consciencia_2025" 
-ref_3         = "corpus_2025"
-
-# OS SEUS LINKS DO GITHUB
 GITHUB_RAW_CURVA = f"https://raw.githubusercontent.com/laviniateixeira-dev/Pricing-Corpus-Christi/main/data/curva_{feriado_atual}.csv"
-# ==========================================
 
 st.set_page_config(
     page_title="Pricing · Editor",
@@ -49,37 +43,17 @@ st.markdown("""
 }
 
 /* Tipografia Global */
-html, body, [class*="css"] {
-  font-family: 'DM Sans', sans-serif !important;
-}
-h1, h2, h3, .pg-title, .section-title {
-  font-family: 'DM Serif Display', serif !important;
-  color: var(--text-color) !important;
-}
+html, body, [class*="css"] { font-family: 'DM Sans', sans-serif !important; }
+h1, h2, h3, .pg-title, .section-title { font-family: 'DM Serif Display', serif !important; color: var(--text-color) !important; }
 
 /* Headers Customizados */
-.pg-header {
-  display: flex; align-items: flex-end; justify-content: space-between;
-  padding-bottom: 1rem; margin-bottom: 1.5rem; 
-  border-bottom: 2px solid var(--buser-pink-transp);
-}
-.pg-eyebrow { 
-  font-size: .75rem; font-weight: 800; letter-spacing: 1.5px; 
-  text-transform: uppercase; color: var(--buser-pink); margin-bottom: 4px; 
-}
-.pg-title { 
-  font-size: 2.5rem; font-weight: 400; line-height: 1.1; 
-  display: flex; align-items: center;
-}
+.pg-header { display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 0.2rem; }
+.pg-eyebrow { font-size: .75rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--buser-pink); margin-bottom: 4px; }
+.pg-title { font-size: 2.5rem; font-weight: 400; line-height: 1.1; display: flex; align-items: center; }
+.header-divider { border-bottom: 2px solid var(--buser-pink-transp); padding-bottom: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: flex-end; }
 
 /* Ponto Live Pulsante */
-.live-dot {
-  height: 12px; width: 12px; background-color: var(--buser-pink);
-  border-radius: 50%; display: inline-block; margin-right: 15px;
-  box-shadow: 0 0 0 0 rgba(255, 51, 119, 0.7);
-  animation: pulse-pink 2s infinite;
-}
-
+.live-dot { height: 12px; width: 12px; background-color: var(--buser-pink); border-radius: 50%; display: inline-block; margin-right: 15px; box-shadow: 0 0 0 0 rgba(255, 51, 119, 0.7); animation: pulse-pink 2s infinite; }
 @keyframes pulse-pink {
   0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 51, 119, 0.7); }
   70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 51, 119, 0); }
@@ -87,121 +61,29 @@ h1, h2, h3, .pg-title, .section-title {
 }
 
 /* Labels de Seção */
-.section-label { 
-  font-size: .75rem; font-weight: 800; letter-spacing: 1.2px; 
-  text-transform: uppercase; color: var(--buser-pink) !important;
-  margin-bottom: 8px; margin-top: 2rem; 
-}
+.section-label { font-size: .75rem; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--buser-pink) !important; margin-bottom: 8px; margin-top: 2rem; }
 
-/* ── ESTILIZAÇÃO ADAPTATIVA PARA SELECT, MULTISELECT E TEXT INPUT ── */
+/* Widgets */
 [data-testid="stMultiSelect"] [data-baseweb="select"] > div,
 [data-testid="stSelectbox"] [data-baseweb="select"] > div,
-[data-testid="stTextInput"] div[data-baseweb="input"] {
-    background-color: transparent !important; 
-    border: 1px solid var(--buser-pink) !important; 
-    border-radius: 6px !important;
-    min-height: 42px !important;
-}
-
-/* Remove a borda e background padrão do input interno para não duplicar o estilo */
-[data-testid="stTextInput"] input {
-    background-color: transparent !important;
-    border: none !important;
-}
-
-/* Força a cor do texto do placeholder e input de texto para rosa */
-[data-testid="stTextInput"] input,
-[data-testid="stTextInput"] input::placeholder {
-    color: var(--buser-pink) !important;
-    font-weight: 600 !important;
-    -webkit-text-fill-color: var(--buser-pink) !important; /* Força a cor do placeholder em alguns navegadores */
-}
-
-/* Força a cor do texto padrão nos selects para rosa */
-[data-testid="stSelectbox"] [data-baseweb="select"] *,
-[data-testid="stMultiSelect"] [data-baseweb="select"] * {
-    color: var(--buser-pink) !important;
-    font-weight: 600 !important;
-}
-
-/* ── CORREÇÃO DO BUG: TAGS DO MULTISELECT (As "Pílulas") ── */
-[data-testid="stMultiSelect"] [data-baseweb="tag"] {
-  background-color: transparent !important; /* Fundo invisível para acompanhar o Light/Dark mode */
-  border: 1px solid var(--buser-pink) !important; /* Borda rosa para dar contorno */
-  border-radius: 4px !important;
-  margin-top: 4px !important;
-  margin-bottom: 4px !important;
-}
-/* A regra abaixo obriga qualquer texto ou ícone dentro da tag a ser rosa */
-[data-testid="stMultiSelect"] [data-baseweb="tag"] span,
-[data-testid="stMultiSelect"] [data-baseweb="tag"] div,
-[data-testid="stMultiSelect"] [data-baseweb="tag"] svg,
-[data-testid="stMultiSelect"] [data-baseweb="tag"] * {
-  color: var(--buser-pink) !important; 
-  fill: var(--buser-pink) !important;
-  font-weight: 800 !important;
-  font-size: 0.85rem !important;
-}
-
-/* Dropdown (Menu que abre ao clicar) */
-[data-baseweb="popover"] [data-baseweb="menu"] {
-    background-color: var(--background-color) !important; 
-    border: 1px solid var(--buser-pink) !important;
-}
-[data-baseweb="option"] {
-    color: var(--buser-pink) !important;
-    font-weight: 600 !important;
-}
-[data-baseweb="option"]:hover, [aria-selected="true"][data-baseweb="option"] {
-    background-color: var(--buser-pink-transp) !important; 
-}
-
-/* ── BOTÕES GERAIS E ABAS ── */
-[data-testid="stButton"] button {
-    border-color: var(--buser-pink) !important;
-    color: var(--buser-pink) !important;
-    font-weight: 600 !important;
-    border-radius: 6px !important;
-}
-[data-testid="stButton"] button:hover {
-    background-color: var(--buser-pink) !important;
-    color: white !important;
-}
-[data-testid="stButton"] button[kind="primary"] {
-    background-color: var(--buser-pink) !important;
-    color: white !important;
-}
-
-/* Tabelas e Abas */
-[data-testid="stDataTable"] {
-  border: 1px solid rgba(150, 150, 150, 0.2) !important;
-  border-radius: 8px !important;
-}
-
-[data-testid="stTabs"] [data-baseweb="tab"] {
-  font-family: 'DM Sans', sans-serif !important;
-  padding-top: 10px; padding-bottom: 10px;
-}
-[data-testid="stTabs"] [aria-selected="true"][data-baseweb="tab"] {
-  color: var(--buser-pink) !important; 
-  border-bottom-color: var(--buser-pink) !important;
-  font-weight: 700 !important;
-}
-
-/* Banners de Sucesso/Aviso */
-.acion-banner {
-  display: flex; align-items: center; background-color: rgba(16, 185, 129, 0.1); 
-  border: 1px solid rgba(16, 185, 129, 0.3); border-left: 4px solid #10B981; 
-  border-radius: 8px; padding: 14px 20px; margin: 1.5rem 0 1rem;
-}
+[data-testid="stTextInput"] div[data-baseweb="input"] { background-color: transparent !important; border: 1px solid var(--buser-pink) !important; border-radius: 6px !important; min-height: 42px !important; }
+[data-testid="stTextInput"] input { background-color: transparent !important; border: none !important; }
+[data-testid="stTextInput"] input, [data-testid="stTextInput"] input::placeholder { color: var(--buser-pink) !important; font-weight: 600 !important; -webkit-text-fill-color: var(--buser-pink) !important; }
+[data-testid="stSelectbox"] [data-baseweb="select"] *, [data-testid="stMultiSelect"] [data-baseweb="select"] * { color: var(--buser-pink) !important; font-weight: 600 !important; }
+[data-testid="stMultiSelect"] [data-baseweb="tag"] { background-color: transparent !important; border: 1px solid var(--buser-pink) !important; border-radius: 4px !important; margin-top: 4px !important; margin-bottom: 4px !important; }
+[data-testid="stMultiSelect"] [data-baseweb="tag"] * { color: var(--buser-pink) !important; fill: var(--buser-pink) !important; font-weight: 800 !important; font-size: 0.85rem !important; }
+[data-baseweb="popover"] [data-baseweb="menu"] { background-color: var(--background-color) !important; border: 1px solid var(--buser-pink) !important; }
+[data-baseweb="option"] { color: var(--buser-pink) !important; font-weight: 600 !important; }
+[data-baseweb="option"]:hover, [aria-selected="true"][data-baseweb="option"] { background-color: var(--buser-pink-transp) !important; }
+[data-testid="stButton"] button { border-color: var(--buser-pink) !important; color: var(--buser-pink) !important; font-weight: 600 !important; border-radius: 6px !important; }
+[data-testid="stButton"] button:hover { background-color: var(--buser-pink) !important; color: white !important; }
+[data-testid="stButton"] button[kind="primary"] { background-color: var(--buser-pink) !important; color: white !important; }
+[data-testid="stDataTable"] { border: 1px solid rgba(150, 150, 150, 0.2) !important; border-radius: 8px !important; }
+[data-testid="stTabs"] [data-baseweb="tab"] { font-family: 'DM Sans', sans-serif !important; padding-top: 10px; padding-bottom: 10px; }
+[data-testid="stTabs"] [aria-selected="true"][data-baseweb="tab"] { color: var(--buser-pink) !important; border-bottom-color: var(--buser-pink) !important; font-weight: 700 !important; }
+.acion-banner { display: flex; align-items: center; background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-left: 4px solid #10B981; border-radius: 8px; padding: 14px 20px; margin: 1.5rem 0 1rem; }
 .acion-txt { font-size: .95rem; color: #10B981 !important; font-weight: 700; }
-
-.warn-banner {
-  background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); 
-  border-left: 4px solid #F59E0B; border-radius: 8px; padding: 12px 18px; margin-bottom: 1rem;
-  font-size: .9rem; color: #F59E0B; font-weight: 600;
-}
-
+.warn-banner { background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-left: 4px solid #F59E0B; border-radius: 8px; padding: 12px 18px; margin-bottom: 1rem; font-size: .9rem; color: #F59E0B; font-weight: 600; }
 .footer { display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; margin-top: 2rem; border-top: 1px solid rgba(150, 150, 150, 0.2); }
 .ftxt { font-size: .8rem; font-weight: 500; color: var(--text-color); opacity: 0.6; }
 </style>
@@ -223,17 +105,27 @@ def prep_editor(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty: return df
     df = df.copy()
     
-    float_cols = ["occ_atual", "load_factor_atual", f"lf_{ref_1}", f"lf_{ref_3}", f"ratio_lf_{ref_1}", f"ratio_lf_{ref_3}",
-                  f"tkm_{ref_1}", f"tkm_{ref_3}", "tkm_atual", "preco_cenario_atual", "preco_atual_bucket", "max_split",
-                  "mult_atual_aplicado", "price_cc", "mult_flutuacao", "preco_flutuacao", "preco_maximo_feriado", f"buscas_{ref_1}", f"buscas_{ref_3}", "buscas_atual"]
+    # Atualizado com o novo schema de colunas Float
+    float_cols = [
+        "lf_corpus_2025", "lf_pascoa_2026", "lf_maio_2026", "lf_atual",
+        "ratio_lf_corpus_2025", "ratio_lf_pascoa_2026", "ratio_lf_maio_2026",
+        "tkm_corpus_2025", "tkm_pascoa_2026", "tkm_maio_2026", "tkm_atual",
+        "price_cc", "mult_atual_aplicado", "preco_cenario_atual", 
+        "mult_flutuacao", "preco_flutuacao", "preco_maximo_feriado"
+    ]
     for c in float_cols:
         if c in df.columns: df[c] = pd.to_numeric(df[c].replace("null", None), errors="coerce")
             
-    int_cols = ["pax", "capacidade_atual", "vagas_restantes", "antecedencia", f"grupos_{ref_1}", f"grupos_{ref_3}", "grupos_atual"]
+    # Atualizado com o novo schema de colunas Int
+    int_cols = [
+        "antecedencia", "buscas_corpus_2025", "buscas_pascoa_2026", 
+        "buscas_maio_2026", "buscas_corpus_2026", "pax_atual", 
+        "capacidade_atual", "vagas_restantes"
+    ]
     for c in int_cols:
         if c in df.columns: df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype(int)
             
-    if "data" in df.columns: df["data"] = pd.to_datetime(df["data"], errors="coerce")
+    if "data_atual" in df.columns: df["data_atual"] = pd.to_datetime(df["data_atual"], errors="coerce")
     return df
 
 # ── SIDEBAR ───────────────────────────────────────────────────────────────────
@@ -254,13 +146,31 @@ tab1, tab2 = st.tabs(["Editor de Preços", "Histórico de Alterações"])
 def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
     agora_t = datetime.now().strftime("%d/%m/%Y %H:%M")
 
+    # Cabeçalho com o Seletor de Feriado de Referência
+    col_t1, col_t2 = st.columns([3, 1])
+    with col_t1:
+        st.markdown(f"""
+        <div class="pg-header">
+          <div>
+            <div class="pg-eyebrow">Ações de Pricing</div>
+            <div class="pg-title"><span class="live-dot"></span>{titulo}</div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col_t2:
+        opcoes_ref = {
+            "Páscoa 2026": "pascoa_2026", 
+            "Corpus 2025": "corpus_2025", 
+            "Maio 2026": "maio_2026"
+        }
+        st.write("") # Espaçador
+        ref_nome = st.selectbox("Comparar com (Ref):", list(opcoes_ref.keys()), key=f"{tab_key}_ref_sel")
+        ref_sel = opcoes_ref[ref_nome]
+
     st.markdown(f"""
-    <div class="pg-header">
-      <div>
-        <div class="pg-eyebrow">Ações de Pricing</div>
-        <div class="pg-title"><span class="live-dot"></span>{titulo}</div>
-      </div>
-      <div><span style="color:var(--text-color); opacity: 0.6; font-size:0.85rem; font-weight: 500;">Atualizado via Databricks às {agora_t}</span></div>
+    <div class="header-divider">
+        <span style="color:var(--text-color); opacity: 0.6; font-size:0.85rem; font-weight: 500;">Atualizado via Databricks às {agora_t}</span>
     </div>
     """, unsafe_allow_html=True)
 
@@ -269,7 +179,7 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         return
 
     def calc_row_id(row):
-        d_str = pd.to_datetime(row["data"]).strftime("%Y-%m-%d") if pd.notna(row["data"]) else ""
+        d_str = pd.to_datetime(row["data_atual"]).strftime("%Y-%m-%d") if pd.notna(row["data_atual"]) else ""
         return f"{d_str}|{row.get('turno','')}|{row.get('sentido','')}|{row.get('tipo_assento','')}"
 
     if "row_id" not in df_raw.columns:
@@ -285,7 +195,7 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
     st.markdown('<div class="section-label" style="margin-top: 0.5rem;">Filtros de Busca</div>', unsafe_allow_html=True)
     col_f1, col_f2, col_f3 = st.columns(3)
     with col_f1:
-        datas_c = sorted(df_raw["data"].dt.date.dropna().unique())
+        datas_c = sorted(df_raw["data_atual"].dt.date.dropna().unique())
         datas_c_sel = st.multiselect("Data da Viagem:", options=datas_c, default=datas_c, format_func=lambda d: d.strftime("%d/%m"), key=f"{tab_key}_datas")
     with col_f2:
         turnos_c = sorted(df_raw["turno"].dropna().unique())
@@ -294,7 +204,7 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         rota_c = st.text_input("Buscar Sentido:", placeholder="Ex: BHZ-RIO", key=f"{tab_key}_rota")
 
     df_cv = df_raw.copy()
-    if datas_c_sel: df_cv = df_cv[df_cv["data"].dt.date.isin(datas_c_sel)]
+    if datas_c_sel: df_cv = df_cv[df_cv["data_atual"].dt.date.isin(datas_c_sel)]
     if turnos_sel:  df_cv = df_cv[df_cv["turno"].isin(turnos_sel)]
     if rota_c:      df_cv = df_cv[df_cv["sentido"].str.upper().str.contains(rota_c.upper(), na=False)]
 
@@ -311,25 +221,36 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
                 st.session_state[key_enviadas] = set()
                 st.rerun()
 
-    cols_editor = ["row_id", "data", "antecedencia", "rota_principal", "sentido", "tipo_assento", "turno", f"buscas_{ref_1}", "buscas_atual", f"grupos_{ref_1}", "grupos_atual", "pax", "capacidade_atual", "vagas_restantes", f"lf_{ref_1}", "load_factor_atual", f"ratio_lf_{ref_1}", f"tkm_{ref_1}", "tkm_atual", "price_cc", "mult_atual_aplicado", "mult_flutuacao", "preco_flutuacao", "preco_cenario_atual", "preco_atual_bucket", "max_split", "preco_maximo_feriado", "data_atualizacao"]
+    # Define dinamicamente quais colunas usar da tabela baseada na seleção
+    cols_editor = [
+        "row_id", "data_atual", "antecedencia", "rota_principal", "sentido", "tipo_assento", "turno", 
+        f"buscas_{ref_sel}", "buscas_corpus_2026", "pax_atual", "capacidade_atual", "vagas_restantes", 
+        f"lf_{ref_sel}", "lf_atual", f"ratio_lf_{ref_sel}", f"tkm_{ref_sel}", "tkm_atual", 
+        "price_cc", "mult_atual_aplicado", "mult_flutuacao", "preco_flutuacao", "preco_cenario_atual", 
+        "preco_maximo_feriado", "data_atualizacao"
+    ]
     cols_presentes = [c for c in cols_editor if c in df_cv_editor.columns]
     df_editor = df_cv_editor[cols_presentes].copy()
 
-    df_editor["data_fmt"] = pd.to_datetime(df_editor["data"]).dt.strftime("%d/%m/%Y")
+    df_editor["data_fmt"] = pd.to_datetime(df_editor["data_atual"]).dt.strftime("%d/%m/%Y")
     
-    if f"ratio_lf_{ref_1}" in df_editor.columns: df_editor["ratio_r1_fmt"] = df_editor[f"ratio_lf_{ref_1}"].astype(float).round(3).astype(str) + "x"
-    if f"lf_{ref_1}" in df_editor.columns: df_editor["lf_r1_fmt"] = (df_editor[f"lf_{ref_1}"] * 100).astype(float).round(1).astype(str) + "%"
-    if "load_factor_atual" in df_editor.columns: df_editor["lf_a_fmt"] = (df_editor["load_factor_atual"] * 100).astype(float).round(1).astype(str) + "%"
+    if f"ratio_lf_{ref_sel}" in df_editor.columns: 
+        df_editor["ratio_ref_fmt"] = df_editor[f"ratio_lf_{ref_sel}"].astype(float).round(3).astype(str) + "x"
+    if f"lf_{ref_sel}" in df_editor.columns: 
+        df_editor["lf_ref_fmt"] = (df_editor[f"lf_{ref_sel}"] * 100).astype(float).round(1).astype(str) + "%"
+    if "lf_atual" in df_editor.columns: 
+        df_editor["lf_a_fmt"] = (df_editor["lf_atual"] * 100).astype(float).round(1).astype(str) + "%"
 
     df_editor["incluir"] = df_editor["row_id"].map(lambda x: st.session_state[dict_key].get(x, {}).get("incluir", True))
     df_editor["Preco novo"] = df_editor["row_id"].map(lambda x: st.session_state[dict_key].get(x, {}).get("Preco novo", None))
 
     show_cols = [
         "incluir", "data_fmt", "antecedencia", "rota_principal", "sentido", 
-        "tipo_assento", "turno", f"buscas_{ref_1}", "buscas_atual", 
-        "pax", "capacidade_atual", "vagas_restantes", "lf_r1_fmt", "lf_a_fmt", 
-        "ratio_r1_fmt", f"tkm_{ref_1}", "tkm_atual", "price_cc", "mult_atual_aplicado", 
-        "preco_cenario_atual", "mult_flutuacao", "preco_flutuacao", "preco_maximo_feriado", "Preco novo", "data_atualizacao"
+        "tipo_assento", "turno", f"buscas_{ref_sel}", "buscas_corpus_2026", 
+        "pax_atual", "capacidade_atual", "vagas_restantes", "lf_ref_fmt", "lf_a_fmt", 
+        "ratio_ref_fmt", f"tkm_{ref_sel}", "tkm_atual", "price_cc", "mult_atual_aplicado", 
+        "preco_cenario_atual", "mult_flutuacao", "preco_flutuacao", "preco_maximo_feriado", 
+        "Preco novo", "data_atualizacao"
     ]
     show_cols = [c for c in show_cols if c in df_editor.columns or c in ["incluir", "Preco novo"]]
     df_show = df_editor[show_cols].copy()
@@ -342,15 +263,15 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         "sentido": st.column_config.TextColumn("Sentido", disabled=True),
         "tipo_assento": st.column_config.TextColumn("Assento", disabled=True),
         "turno": st.column_config.TextColumn("Turno", disabled=True),
-        f"buscas_{ref_1}": st.column_config.NumberColumn("Buscas Ref", disabled=True),
-        "buscas_atual": st.column_config.NumberColumn("Buscas Atual", disabled=True),
-        "pax": st.column_config.NumberColumn("PAX", disabled=True),
+        f"buscas_{ref_sel}": st.column_config.NumberColumn("Buscas Ref", disabled=True),
+        "buscas_corpus_2026": st.column_config.NumberColumn("Buscas Atual", disabled=True),
+        "pax_atual": st.column_config.NumberColumn("PAX Atual", disabled=True),
         "capacidade_atual": st.column_config.NumberColumn("Capacidade", disabled=True),
         "vagas_restantes": st.column_config.NumberColumn("↑ Vagas", disabled=True),
-        "lf_r1_fmt": st.column_config.TextColumn("LF Referência", disabled=True),
+        "lf_ref_fmt": st.column_config.TextColumn("LF Referência", disabled=True),
         "lf_a_fmt": st.column_config.TextColumn("LF Atual", disabled=True),
-        "ratio_r1_fmt": st.column_config.TextColumn("Ratio LF", disabled=True),
-        f"tkm_{ref_1}": st.column_config.NumberColumn("TKM Ref", disabled=True, format="R$ %.0f"),
+        "ratio_ref_fmt": st.column_config.TextColumn("Ratio LF", disabled=True),
+        f"tkm_{ref_sel}": st.column_config.NumberColumn("TKM Ref", disabled=True, format="R$ %.0f"),
         "tkm_atual": st.column_config.NumberColumn("TKM Atual", disabled=True, format="R$ %.0f"),
         "price_cc": st.column_config.NumberColumn("Price CC", disabled=True, format="R$ %.0f"),
         "mult_atual_aplicado": st.column_config.NumberColumn("Mult Final", disabled=True, format="%.3fx"),
@@ -389,6 +310,7 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         n_excluidas = len(df_todas_edicoes) - len(df_editado)
 
         if not df_editado.empty:
+            # Proteção caso a coluna max_split não exista mais no novo schema do databricks
             p_flut = df_editado["preco_flutuacao"].astype(float) if "preco_flutuacao" in df_editado.columns else pd.Series(np.nan, index=df_editado.index)
             m_split = df_editado["max_split"].astype(float) if "max_split" in df_editado.columns else pd.Series(np.nan, index=df_editado.index)
             
@@ -397,7 +319,7 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
             df_editado["_base_calc"] = base_vals
             df_editado["_mult_novo"] = (df_editado["Preco novo"] / df_editado["_base_calc"]).round(6)
 
-            df_editado["data_fmt"] = pd.to_datetime(df_editado["data"]).dt.strftime("%d/%m/%Y")
+            df_editado["data_fmt"] = pd.to_datetime(df_editado["data_atual"]).dt.strftime("%d/%m/%Y")
             df_acionamento = pd.DataFrame({
                 "row_id": df_editado["row_id"].values,
                 "data": pd.to_datetime(df_editado["data_fmt"], format="%d/%m/%Y").dt.strftime("%Y-%m-%d"),
@@ -423,7 +345,6 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
                 df_hist_new = df_export.copy()
                 df_hist_new["Data Alteração"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                 st.session_state['history_df'] = pd.concat([st.session_state['history_df'], df_hist_new], ignore_index=True)
-                # --- SALVANDO NO ARQUIVO LOCAL PARA FIXAR ---
                 st.session_state['history_df'].to_csv(ARQUIVO_HISTORICO, index=False)
 
                 for r_id in df_acionamento["row_id"]:
@@ -495,7 +416,6 @@ def render_historico():
                         df_up = pd.read_csv(uploaded_file)
                         df_up["Data Alteração"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                         st.session_state['history_df'] = pd.concat([st.session_state['history_df'], df_up], ignore_index=True)
-                        # --- SALVANDO NO ARQUIVO LOCAL PARA FIXAR ---
                         st.session_state['history_df'].to_csv(ARQUIVO_HISTORICO, index=False)
                         st.success("Tudo certo! Adicionado à tabela.")
                         st.rerun()

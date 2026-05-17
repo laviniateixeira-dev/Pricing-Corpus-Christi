@@ -23,7 +23,8 @@ if 'history_df' not in st.session_state:
 # CONFIGURAÇÕES DA PÁGINA E LINKS
 # ==========================================
 feriado_atual = "corpus_2026"
-GITHUB_RAW_CURVA = f"https://raw.githubusercontent.com/laviniateixeira-dev/Pricing-Corpus-Christi/main/data/curva_{feriado_atual}.csv"
+# Forçando cache buster com v=2 para o Streamlit pegar a versão fresca do GitHub
+GITHUB_RAW_CURVA = f"https://raw.githubusercontent.com/laviniateixeira-dev/Pricing-Corpus-Christi/main/data/curva_{feriado_atual}.csv?v=2"
 
 st.set_page_config(
     page_title="Pricing · Editor",
@@ -109,25 +110,15 @@ def prep_editor(df: pd.DataFrame) -> pd.DataFrame:
     if "data" in df.columns and "data_atual" not in df.columns:
         df = df.rename(columns={"data": "data_atual"})
     
-    # Colunas Float
-    float_cols = [
-        "lf_corpus_2025", "lf_pascoa_2026", "lf_maio_2026", "lf_atual",
-        "ratio_lf_corpus_2025", "ratio_lf_pascoa_2026", "ratio_lf_maio_2026",
-        "tkm_corpus_2025", "tkm_pascoa_2026", "tkm_maio_2026", "tkm_atual",
-        "price_cc", "mult_atual_aplicado", "preco_cenario_atual", 
-        "mult_flutuacao", "preco_flutuacao", "preco_maximo_feriado"
-    ]
-    for c in float_cols:
-        if c in df.columns: df[c] = pd.to_numeric(df[c].replace("null", None), errors="coerce")
-            
-    # Colunas Int
-    int_cols = [
-        "antecedencia", "buscas_corpus_2025", "buscas_pascoa_2026", 
-        "buscas_maio_2026", "buscas_corpus_2026", "pax_atual", 
-        "capacidade_atual", "vagas_restantes"
-    ]
-    for c in int_cols:
-        if c in df.columns: df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype(int)
+    # --- NOVO PREP DINÂMICO ---
+    # Classifica e converte as colunas automaticamente pelo prefixo, evitando que o código quebre!
+    for c in df.columns:
+        if any(keyword in c for keyword in ["lf_", "ratio_", "tkm_", "price_", "mult_", "preco_"]):
+            # Converte tudo que é financeiro ou load factor para Float
+            df[c] = pd.to_numeric(df[c].astype(str).str.replace("null", ""), errors="coerce")
+        elif any(keyword in c for keyword in ["buscas_", "pax_", "capacidade_", "vagas_", "antecedencia"]):
+            # Converte tudo que é quantidade para Int
+            df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype(int)
             
     if "data_atual" in df.columns: df["data_atual"] = pd.to_datetime(df["data_atual"], errors="coerce")
     return df
@@ -163,14 +154,25 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         """, unsafe_allow_html=True)
     
     with col_t2:
-        opcoes_ref = {
-            "Páscoa 2026": "pascoa_2026", 
-            "Corpus 2025": "corpus_2025", 
-            "Maio 2026": "maio_2026"
-        }
+        opcoes_dropdown = ["Páscoa 2026", "Corpus 2025", "Maio 2026"]
         st.write("") # Espaçador
-        ref_nome = st.selectbox("Comparar com (Ref):", list(opcoes_ref.keys()), key=f"{tab_key}_ref_sel")
-        ref_sel = opcoes_ref[ref_nome]
+        ref_nome = st.selectbox("Comparar com (Ref):", opcoes_dropdown, key=f"{tab_key}_ref_sel")
+        
+        # ==========================================
+        # SMART FINDER DE COLUNAS
+        # ==========================================
+        # Busca automaticamente o sufixo exato gerado pelo seu Databricks
+        sufixos_csv = [c.replace("buscas_", "") for c in df_raw.columns if c.startswith("buscas_") and c not in ["buscas_atual", "buscas_corpus_2026"]]
+        
+        # Pega a palavra base para encontrar a correspondência (ex: "Páscoa" -> "pascoa")
+        palavra_chave = ref_nome.split(" ")[0].lower().replace("á", "a")
+        
+        # Se não achar nada, usa o fallback padrão. Se achar, se adapta!
+        ref_sel = ref_nome.lower().replace("á", "a").replace(" ", "_")
+        for suf in sufixos_csv:
+            if palavra_chave in suf:
+                ref_sel = suf
+                break
 
     st.markdown(f"""
     <div class="header-divider">
@@ -183,7 +185,6 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         return
 
     def calc_row_id(row):
-        # Usa .get para não quebrar a tela se a coluna por algum motivo bizarro não existir
         data_val = row.get("data_atual")
         d_str = pd.to_datetime(data_val).strftime("%Y-%m-%d") if pd.notna(data_val) else ""
         return f"{d_str}|{row.get('turno','')}|{row.get('sentido','')}|{row.get('tipo_assento','')}"

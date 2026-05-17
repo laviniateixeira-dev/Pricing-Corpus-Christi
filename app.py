@@ -97,7 +97,8 @@ def load_data(url: str) -> pd.DataFrame:
         r = requests.get(url, timeout=15)
         r.raise_for_status()
         df = pd.read_csv(io.StringIO(r.text))
-        df.columns = df.columns.str.strip()
+        # CORREÇÃO: Força todas as colunas para texto minúsculo e sem espaços
+        df.columns = [str(c).lower().strip() for c in df.columns]
         return df
     except Exception:
         return pd.DataFrame()

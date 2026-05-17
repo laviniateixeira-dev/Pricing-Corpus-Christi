@@ -288,8 +288,8 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         "Preco novo"
     ]
     
-    # Garante que só vai exibir as que realmente existirem no Dataframe processado
-    show_cols_safe = [c for c in show_cols if c in df_editor.columns or c in ["incluir", "Preco novo", "data_ref_fmt", "data_fmt", "lf_ref_fmt", "lf_a_fmt", "ratio_ref_fmt"]]
+    # Garante que só vai exibir as colunas que realmente existirem no Dataframe processado
+    show_cols_safe = [c for c in show_cols if c in df_editor.columns]
     df_show = df_editor[show_cols_safe].copy()
 
     # Configuração dos nomes que vão aparecer lá em cima do Editor

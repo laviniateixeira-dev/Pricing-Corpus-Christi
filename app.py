@@ -23,8 +23,8 @@ if 'history_df' not in st.session_state:
 # CONFIGURAÇÕES DA PÁGINA E LINKS
 # ==========================================
 feriado_atual = "corpus_2026"
-# Forçando cache buster com v=2 para o Streamlit pegar a versão fresca do GitHub
-GITHUB_RAW_CURVA = f"https://raw.githubusercontent.com/laviniateixeira-dev/Pricing-Corpus-Christi/main/data/curva_{feriado_atual}.csv?v=2"
+# v=3 para forçar quebra de cache forte no GitHub
+GITHUB_RAW_CURVA = f"https://raw.githubusercontent.com/laviniateixeira-dev/Pricing-Corpus-Christi/main/data/curva_{feriado_atual}.csv?v=3"
 
 st.set_page_config(
     page_title="Pricing · Editor",
@@ -106,22 +106,31 @@ def prep_editor(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty: return df
     df = df.copy()
     
-    # Prevenção contra quebra se o arquivo no cache ainda for o antigo
     if "data" in df.columns and "data_atual" not in df.columns:
         df = df.rename(columns={"data": "data_atual"})
     
-    # --- NOVO PREP DINÂMICO ---
-    # Classifica e converte as colunas automaticamente pelo prefixo, evitando que o código quebre!
+    # Classifica e converte as colunas automaticamente pelo prefixo (Imune a novos feriados!)
     for c in df.columns:
         if any(keyword in c for keyword in ["lf_", "ratio_", "tkm_", "price_", "mult_", "preco_"]):
-            # Converte tudo que é financeiro ou load factor para Float
             df[c] = pd.to_numeric(df[c].astype(str).str.replace("null", ""), errors="coerce")
         elif any(keyword in c for keyword in ["buscas_", "pax_", "capacidade_", "vagas_", "antecedencia"]):
-            # Converte tudo que é quantidade para Int
             df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype(int)
             
     if "data_atual" in df.columns: df["data_atual"] = pd.to_datetime(df["data_atual"], errors="coerce")
     return df
+
+# ── CAÇADOR INTELIGENTE DE COLUNAS ─────────────────────────────────────────────
+def get_ref_col(prefix, ref_name, columns):
+    # Separa a palavra-chave (ex: "maio") e o ano (ex: "26")
+    parts = ref_name.lower().replace("á", "a").split(" ")
+    kw1 = parts[0] 
+    kw2 = parts[1][-2:] # Pega apenas os dois últimos dígitos do ano
+    
+    # Procura a coluna que bata com as regras
+    for c in columns:
+        if c.startswith(prefix) and kw1 in c and kw2 in c:
+            return c
+    return f"{prefix}{kw1}_{kw2}_missing" # Se não achar, cria um fake só pra não quebrar a lógica
 
 # ── SIDEBAR ───────────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -141,7 +150,6 @@ tab1, tab2 = st.tabs(["Editor de Preços", "Histórico de Alterações"])
 def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
     agora_t = datetime.now().strftime("%d/%m/%Y %H:%M")
 
-    # Cabeçalho com o Seletor de Feriado de Referência
     col_t1, col_t2 = st.columns([3, 1])
     with col_t1:
         st.markdown(f"""
@@ -158,21 +166,12 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         st.write("") # Espaçador
         ref_nome = st.selectbox("Comparar com (Ref):", opcoes_dropdown, key=f"{tab_key}_ref_sel")
         
-        # ==========================================
-        # SMART FINDER DE COLUNAS
-        # ==========================================
-        # Busca automaticamente o sufixo exato gerado pelo seu Databricks
-        sufixos_csv = [c.replace("buscas_", "") for c in df_raw.columns if c.startswith("buscas_") and c not in ["buscas_atual", "buscas_corpus_2026"]]
-        
-        # Pega a palavra base para encontrar a correspondência (ex: "Páscoa" -> "pascoa")
-        palavra_chave = ref_nome.split(" ")[0].lower().replace("á", "a")
-        
-        # Se não achar nada, usa o fallback padrão. Se achar, se adapta!
-        ref_sel = ref_nome.lower().replace("á", "a").replace(" ", "_")
-        for suf in sufixos_csv:
-            if palavra_chave in suf:
-                ref_sel = suf
-                break
+        # Mapeando dinamicamente as colunas exatas que o Databricks gerou
+        col_data_ref = get_ref_col("data_ref_", ref_nome, df_raw.columns)
+        col_buscas   = get_ref_col("buscas_", ref_nome, df_raw.columns)
+        col_lf       = get_ref_col("lf_", ref_nome, df_raw.columns)
+        col_ratio    = get_ref_col("ratio_lf_", ref_nome, df_raw.columns)
+        col_tkm      = get_ref_col("tkm_", ref_nome, df_raw.columns)
 
     st.markdown(f"""
     <div class="header-divider">
@@ -183,6 +182,11 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
     if df_raw.empty:
         st.info("Nenhum dado encontrado para o editor. Verifique o arquivo no GitHub.")
         return
+
+    # ALERTA CASO O CSV AINDA NÃO TENHA ATUALIZADO COM OS DADOS NOVOS
+    faltam = [c for c in [col_data_ref, col_buscas, col_lf, col_ratio, col_tkm] if "missing" in c]
+    if faltam:
+        st.markdown(f'<div class="warn-banner">⚠️ Atenção: Os dados do feriado de {ref_nome} ainda não estão disponíveis no CSV. Verifique se a sua query enviou essas colunas e tente Atualizar o Cache.</div>', unsafe_allow_html=True)
 
     def calc_row_id(row):
         data_val = row.get("data_atual")
@@ -228,12 +232,11 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
                 st.session_state[key_enviadas] = set()
                 st.rerun()
 
-    # Define dinamicamente quais colunas usar da tabela baseada na seleção
     cols_editor = [
-        "row_id", f"data_ref_{ref_sel}", "data_atual", "dia_da_semana", "antecedencia", 
+        "row_id", col_data_ref, "data_atual", "dia_da_semana", "antecedencia", 
         "rota_principal", "sentido", "tipo_assento", "turno", 
-        f"buscas_{ref_sel}", "buscas_corpus_2026", "pax_atual", "capacidade_atual", "vagas_restantes", 
-        f"lf_{ref_sel}", "lf_atual", f"ratio_lf_{ref_sel}", "price_cc", f"tkm_{ref_sel}", "tkm_atual", 
+        col_buscas, "buscas_corpus_2026", "pax_atual", "capacidade_atual", "vagas_restantes", 
+        col_lf, "lf_atual", col_ratio, "price_cc", col_tkm, "tkm_atual", 
         "mult_atual_aplicado", "preco_cenario_atual", "mult_flutuacao", "preco_flutuacao", 
         "preco_maximo_feriado", "data_atualizacao"
     ]
@@ -243,14 +246,14 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
     # Formatações Visuais das Colunas
     df_editor["data_fmt"] = pd.to_datetime(df_editor["data_atual"]).dt.strftime("%d/%m/%Y")
     
-    if f"data_ref_{ref_sel}" in df_editor.columns:
-        df_editor["data_ref_fmt"] = pd.to_datetime(df_editor[f"data_ref_{ref_sel}"], errors="coerce").dt.strftime("%d/%m/%Y").fillna("-")
+    if col_data_ref in df_editor.columns:
+        df_editor["data_ref_fmt"] = pd.to_datetime(df_editor[col_data_ref], errors="coerce").dt.strftime("%d/%m/%Y").fillna("-")
 
-    if f"ratio_lf_{ref_sel}" in df_editor.columns: 
-        df_editor["ratio_ref_fmt"] = df_editor[f"ratio_lf_{ref_sel}"].astype(float).round(3).astype(str) + "x"
+    if col_ratio in df_editor.columns: 
+        df_editor["ratio_ref_fmt"] = df_editor[col_ratio].astype(float).round(3).astype(str) + "x"
     
-    if f"lf_{ref_sel}" in df_editor.columns: 
-        df_editor["lf_ref_fmt"] = (df_editor[f"lf_{ref_sel}"] * 100).astype(float).round(1).astype(str) + "%"
+    if col_lf in df_editor.columns: 
+        df_editor["lf_ref_fmt"] = (df_editor[col_lf] * 100).astype(float).round(1).astype(str) + "%"
     
     if "lf_atual" in df_editor.columns: 
         df_editor["lf_a_fmt"] = (df_editor["lf_atual"] * 100).astype(float).round(1).astype(str) + "%"
@@ -258,7 +261,6 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
     df_editor["incluir"] = df_editor["row_id"].map(lambda x: st.session_state[dict_key].get(x, {}).get("incluir", True))
     df_editor["Preco novo"] = df_editor["row_id"].map(lambda x: st.session_state[dict_key].get(x, {}).get("Preco novo", None))
 
-    # ORDEM EXATA QUE VOCÊ PEDIU
     show_cols = [
         "incluir", 
         "data_ref_fmt", 
@@ -269,7 +271,7 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         "sentido", 
         "tipo_assento", 
         "turno", 
-        f"buscas_{ref_sel}", 
+        col_buscas, 
         "buscas_corpus_2026", 
         "pax_atual", 
         "capacidade_atual", 
@@ -278,7 +280,7 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         "lf_a_fmt", 
         "ratio_ref_fmt", 
         "price_cc", 
-        f"tkm_{ref_sel}", 
+        col_tkm, 
         "tkm_atual", 
         "mult_atual_aplicado", 
         "preco_cenario_atual", 
@@ -289,11 +291,9 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         "Preco novo"
     ]
     
-    # Garante que só vai exibir as colunas que realmente existirem no Dataframe processado
     show_cols_safe = [c for c in show_cols if c in df_editor.columns]
     df_show = df_editor[show_cols_safe].copy()
 
-    # Configuração dos nomes que vão aparecer lá em cima do Editor
     col_config = {
         "incluir": st.column_config.CheckboxColumn("Incluir", default=True),
         "data_ref_fmt": st.column_config.TextColumn(f"Data Ref. ({ref_nome})", disabled=True),
@@ -304,7 +304,7 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         "sentido": st.column_config.TextColumn("Sentido", disabled=True),
         "tipo_assento": st.column_config.TextColumn("Assento", disabled=True),
         "turno": st.column_config.TextColumn("Turno", disabled=True),
-        f"buscas_{ref_sel}": st.column_config.NumberColumn(f"Buscas ({ref_nome})", disabled=True),
+        col_buscas: st.column_config.NumberColumn(f"Buscas ({ref_nome})", disabled=True),
         "buscas_corpus_2026": st.column_config.NumberColumn("Buscas Atual", disabled=True),
         "pax_atual": st.column_config.NumberColumn("PAX Atual", disabled=True),
         "capacidade_atual": st.column_config.NumberColumn("Capacidade", disabled=True),
@@ -313,7 +313,7 @@ def render_editor(df_raw: pd.DataFrame, tab_key: str, titulo: str):
         "lf_a_fmt": st.column_config.TextColumn("LF Atual", disabled=True),
         "ratio_ref_fmt": st.column_config.TextColumn(f"Ratio LF ({ref_nome})", disabled=True),
         "price_cc": st.column_config.NumberColumn("Price CC", disabled=True, format="R$ %.0f"),
-        f"tkm_{ref_sel}": st.column_config.NumberColumn(f"TKM ({ref_nome})", disabled=True, format="R$ %.0f"),
+        col_tkm: st.column_config.NumberColumn(f"TKM ({ref_nome})", disabled=True, format="R$ %.0f"),
         "tkm_atual": st.column_config.NumberColumn("TKM Atual", disabled=True, format="R$ %.0f"),
         "mult_atual_aplicado": st.column_config.NumberColumn("Mult Final", disabled=True, format="%.3fx"),
         "preco_cenario_atual": st.column_config.NumberColumn("Preço Cenario", disabled=True, format="R$ %.2f"),
